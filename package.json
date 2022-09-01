@@ -1,12 +1,12 @@
 {
-  "name": "valoremoptions",
+  "name": "valoremoracles",
   "author": "Alcibiades",
   "version": "1.0.0",
   "description": "",
   "homepage": "https://valorem.xyz",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Alcibiades-Capital/valorem-options-contracts.git"
+    "url": "git+https://github.com/valorem-labs-inc/valorem-oracles.git"
   },
   "scripts": {
     "fmt": "forge fmt",

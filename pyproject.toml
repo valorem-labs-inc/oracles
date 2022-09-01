@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "valoremoptionscontracts"
+name = "valoremoracles"
 version = "0.1.0"
 description = ""
 authors = ["Alcibiades <you@example.com>"]
