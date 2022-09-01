@@ -1,11 +1,8 @@
-# Compiler files
-cache/
 out/
-
-# Ignores development broadcast logs
-!/broadcast
-/broadcast/*
-/broadcast/*/31337/
-
-# Dotenv file
+cache/
+node_modules/
+package-lock.json
 .env
+.idea
+
+.vscode/
