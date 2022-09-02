@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "../../../interfaces/IUniswapV3Pool.sol";
+import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 /// From https://github.com/aloelabs/aloe-blend
 interface IVolatilityOracle {
