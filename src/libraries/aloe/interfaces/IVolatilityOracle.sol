@@ -18,12 +18,7 @@ interface IVolatilityOracle {
     function cachedPoolMetadata(IUniswapV3Pool pool)
         external
         view
-        returns (
-            uint32 maxSecondsAgo,
-            uint24 gamma0,
-            uint24 gamma1,
-            int24 tickSpacing
-        );
+        returns (uint32 maxSecondsAgo, uint24 gamma0, uint24 gamma1, int24 tickSpacing);
 
     /**
      * @notice Accesses any of the 25 most recently stored fee growth structs
@@ -37,11 +32,7 @@ interface IVolatilityOracle {
     function feeGrowthGlobals(IUniswapV3Pool pool, uint256 idx)
         external
         view
-        returns (
-            uint256 feeGrowthGlobal0X128,
-            uint256 feeGrowthGlobal1X128,
-            uint32 timestamp
-        );
+        returns (uint256 feeGrowthGlobal0X128, uint256 feeGrowthGlobal1X128, uint32 timestamp);
 
     /**
      * @notice Returns indices that the contract will use to access `feeGrowthGlobals`
@@ -49,10 +40,7 @@ interface IVolatilityOracle {
      * @return read The index that was closest to 24 hours old last time `estimate24H` was called
      * @return write The index that was written to last time `estimate24H` was called
      */
-    function feeGrowthGlobalsIndices(IUniswapV3Pool pool)
-        external
-        view
-        returns (uint8 read, uint8 write);
+    function feeGrowthGlobalsIndices(IUniswapV3Pool pool) external view returns (uint8 read, uint8 write);
 
     /**
      * @notice Updates cached metadata for a Uniswap pool. Must be called at least once
@@ -69,10 +57,7 @@ interface IVolatilityOracle {
      * @param pool The pool to use for volatility estimate
      * @return IV The array of volatility estimates, scaled by 1e18
      */
-    function lens(IUniswapV3Pool pool)
-        external
-        view
-        returns (uint256[25] memory IV);
+    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory IV);
 
     /**
      * @notice Estimates 24-hour implied volatility for a Uniswap pool.
