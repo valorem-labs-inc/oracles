@@ -108,7 +108,7 @@ contract VolatilityOracleTest is Test {
 
         uint256 gas = gasleft();
         volatilityOracle.estimate24H(pool);
-        assertEq(gas - gasleft(), 26428);
+        assertEq(gas - gasleft(), 26349);
     }
 
     function testEstimate24H4() public {
