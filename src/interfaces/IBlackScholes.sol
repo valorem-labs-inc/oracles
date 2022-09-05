@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
+import "./IVolatilityOracle.sol";
+
 /**
  * @notice Interface for pricing strategies via Black Scholes method. Volatility
  * is derived from the Uniswap pool.
  * Risk free rate can be estimated as Aave's USDC deposit rate (see 
  * https://linen.app/interest-rates/earn/historical).
- * 
  */
 interface IBlackScholes {
     function getPutPremium(
