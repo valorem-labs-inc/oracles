@@ -14,16 +14,38 @@ import "solmate/tokens/ERC20.sol";
  */
 interface IBlackScholes {
     /**
-     * @notice Returns the call premium for the supplied valorem optionId
+     * @notice Returns the long call premium for the supplied valorem optionId
      */
-    function getCallPremium(
+    function getLongCallPremium(
         uint256 optionId
     )
     external
     view 
     returns (uint256 callPremium);
 
-    function getCallPremiumEx(
+    /**
+     * @notice Returns the long call premium for the supplied valorem optionId
+     */
+    function getShortCallPremium(
+        uint256 optionId
+    )
+    external
+    view 
+    returns (uint256 callPremium);
+
+
+    function getLongCallPremiumEx(
+        uint256 optionId,
+        IVolatilityOracle volatilityOracle,
+        IPriceOracle priceOracle,
+        IYieldOracle yieldOracle,
+        IOptionSettlementEngine engine
+    )
+    external
+    view 
+    returns (uint256 callPremium);
+
+    function getShortCallPremiumEx(
         uint256 optionId,
         IVolatilityOracle volatilityOracle,
         IPriceOracle priceOracle,
