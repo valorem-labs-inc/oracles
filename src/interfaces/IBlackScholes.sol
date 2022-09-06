@@ -5,6 +5,7 @@ import "./IVolatilityOracle.sol";
 import "./IPriceOracle.sol";
 import "./IYieldOracle.sol";
 
+import "valorem-core/interfaces/IOptionSettlementEngine.sol";
 import "solmate/tokens/ERC20.sol";
 
 /**
@@ -26,7 +27,8 @@ interface IBlackScholes {
         uint256 optionId,
         IVolatilityOracle volatilityOracle,
         IPriceOracle priceOracle,
-        IYieldOracle yieldOracle
+        IYieldOracle yieldOracle,
+        IOptionSettlementEngine engine
     )
     external
     view 
@@ -46,4 +48,9 @@ interface IBlackScholes {
      * @notice sets the yield oracle for the risk free rate
      */
     function setYieldOracle(IYieldOracle oracle);
+
+    /**
+     * @notice sets the Valorem engine for retrieving options
+     */
+    function setValoremOptionSettlementEngine(IOptionSettlementEngine engine);
 }
