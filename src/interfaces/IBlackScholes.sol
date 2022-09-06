@@ -59,20 +59,20 @@ interface IBlackScholes {
     /**
      * @notice sets the oracle from which to retrieve historical or implied volatility
      */
-    function setVolatilityOracle(IVolatilityOracle oracle);
+    function setVolatilityOracle(IVolatilityOracle oracle) external;
 
     /**
      * @notice sets the oracle from which to retrieve the underlying asset price
      */
-    function setPriceOracle(IPriceOracle oracle);
+    function setPriceOracle(IPriceOracle oracle) external;
 
     /**
      * @notice sets the yield oracle for the risk free rate
      */
-    function setYieldOracle(IYieldOracle oracle);
+    function setYieldOracle(IYieldOracle oracle) external;
 
     /**
      * @notice sets the Valorem engine for retrieving options
      */
-    function setValoremOptionSettlementEngine(IOptionSettlementEngine engine);
+    function setValoremOptionSettlementEngine(IOptionSettlementEngine engine) external;
 }
