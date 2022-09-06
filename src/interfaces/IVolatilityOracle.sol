@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-
 /**
  * @notice This is an interface for contracts providing historical volatility,
  * implied volatility, or both.
@@ -12,22 +10,24 @@ import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
  */
 interface IVolatilityOracle {
     /**
-     * @notice Retrieves the historical volatility of a Uniswap pool
-     * @param pool The Uniswap pool to use for a volatility estimate
-     * @return historicalVolatility The historical volatility of the pool, scaled by 1e18
+     * @notice Retrieves the historical volatility of a ERC20 token.
+     * @param token The ERC20 token for which to retrieve historical volatility.
+     * @return historicalVolatility The historical volatility of the token, scaled by 1e18
      */
-    function getHistoricalVolatility(IUniswapV3Pool pool) 
+    function getHistoricalVolatility(address token) 
         external 
         view 
         returns (uint256 historicalVolatility);
 
     /**
-     * @notice Retrieves the implied volatility of a Uniswap pool
-     * @param pool The Uniswap pool to use for a volatility estimate
-     * @return impliedVolatility The implied volatiltiy of the pool, scaled by 1e18
+     * @notice Retrieves the implied volatility of a ERC20 token.
+     * @param token The ERC20 token for which to retrieve historical volatility.
+     * @return impliedVolatility The implied volatiltiy of the token, scaled by 1e18
      */
-    function getImpliedVolatility(IUniswapV3Pool pool) 
+    function getImpliedVolatility(address token) 
         external 
         view 
         returns (uint256 impliedVolatility);
+
+    function decmimals() external view returns (uint256);
 }

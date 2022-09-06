@@ -2,38 +2,48 @@
 pragma solidity 0.8.13;
 
 import "./IVolatilityOracle.sol";
+import "./IPriceOracle.sol";
+import "./IYieldOracle.sol";
+
+import "solmate/tokens/ERC20.sol";
 
 /**
  * @notice Interface for pricing strategies via Black Scholes method. Volatility
  * is derived from the Uniswap pool.
- * Risk free rate can be estimated as Aave's USDC deposit rate (see 
- * https://linen.app/interest-rates/earn/historical).
  */
 interface IBlackScholes {
-    function getPutPremium(
-        IUniswapV3Pool pool,
-        uint256 assetPrice,
-        uint256 exercisePrice,
-        uint256 timeToExpiry,
-        uint256 riskFreeRate
-    )
-    external
-    view
-    returns (uint256 putPremium);
-
+    /**
+     * @notice Returns the call premium for the supplied valorem optionId
+     */
     function getCallPremium(
-        IUniswapV3Pool pool,
-        uint256 assetPrice,
-        uint256 exercisePrice,
-        uint256 timeToExpiry,
-        uint256 riskFreeRate
+        uint256 optionId
     )
     external
     view 
     returns (uint256 callPremium);
 
+    function getCallPremiumEx(
+        uint256 optionId,
+        IVolatilityOracle volatilityOracle,
+        IPriceOracle priceOracle,
+        IYieldOracle yieldOracle
+    )
+    external
+    view 
+    returns (uint256 callPremium);
+
+    /**
+     * @notice sets the oracle from which to retrieve historical or implied volatility
+     */
     function setVolatilityOracle(IVolatilityOracle oracle);
 
-    // TODO: find an on-chain source for the USDC yield in e.g. compound, Aave
-    // function setRiskFreeRateOracle(IRiskFreeRateOracle oracle);
+    /**
+     * @notice sets the oracle from which to retrieve the underlying asset price
+     */
+    function setPriceOracle(IPriceOracle oracle);
+
+    /**
+     * @notice sets the yield oracle for the risk free rate
+     */
+    function setYieldOracle(IYieldOracle oracle);
 }
