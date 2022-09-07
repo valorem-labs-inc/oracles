@@ -6,7 +6,6 @@ import "./IPriceOracle.sol";
 import "./IYieldOracle.sol";
 
 import "valorem-core/interfaces/IOptionSettlementEngine.sol";
-import "solmate/tokens/ERC20.sol";
 
 /**
  * @notice Interface for pricing strategies via Black Scholes method. Volatility
