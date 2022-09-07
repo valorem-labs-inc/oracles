@@ -15,23 +15,12 @@ interface IBlackScholes {
     /**
      * @notice Returns the long call premium for the supplied valorem optionId
      */
-    function getLongCallPremium(
-        uint256 optionId
-    )
-    external
-    view 
-    returns (uint256 callPremium);
+    function getLongCallPremium(uint256 optionId) external view returns (uint256 callPremium);
 
     /**
      * @notice Returns the long call premium for the supplied valorem optionId
      */
-    function getShortCallPremium(
-        uint256 optionId
-    )
-    external
-    view 
-    returns (uint256 callPremium);
-
+    function getShortCallPremium(uint256 optionId) external view returns (uint256 callPremium);
 
     function getLongCallPremiumEx(
         uint256 optionId,
@@ -40,9 +29,9 @@ interface IBlackScholes {
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
-    external
-    view 
-    returns (uint256 callPremium);
+        external
+        view
+        returns (uint256 callPremium);
 
     function getShortCallPremiumEx(
         uint256 optionId,
@@ -51,9 +40,9 @@ interface IBlackScholes {
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
-    external
-    view 
-    returns (uint256 callPremium);
+        external
+        view
+        returns (uint256 callPremium);
 
     /**
      * @notice sets the oracle from which to retrieve historical or implied volatility
