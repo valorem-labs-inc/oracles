@@ -10,3 +10,6 @@
 [submodule "lib/v3-core"]
 	path = lib/v3-core
 	url = https://github.com/Uniswap/v3-core
+[submodule "lib/valorem-core"]
+	path = lib/valorem-core
+	url = https://github.com/valorem-labs-inc/valorem-core.git
