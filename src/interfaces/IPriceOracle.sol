@@ -21,5 +21,9 @@ interface IPriceOracle {
         view 
         returns (uint256 price);
 
-    function decmimals() external view returns (uint256);
+    /**
+     * @notice Returns the scaling factor for the price 
+     * @return scale The power of 10 by which the return is scaled
+     */
+    function scale() external view returns (uint16 scale);
 }
