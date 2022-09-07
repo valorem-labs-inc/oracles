@@ -94,10 +94,6 @@ contract VolatilityOracleTest is Test {
 
             vm.warp(block.timestamp + 61 minutes);
         }
-
-        uint256 gas = gasleft();
-        volatilityOracle.estimate24H(pool);
-        assertEq(gas - gasleft(), 26349);
     }
 
     function testEstimate24H4() public {
