@@ -8,7 +8,7 @@ pragma solidity 0.8.13;
  * various volatility oracles. An external volatility oracle can be used seamlessly
  * by being wrapped in a contract implementing this interface.
  */
-interface IVolatilityOracle {
+interface IVolatilityOracleAdapter {
     /**
      * @notice Retrieves the historical volatility of a ERC20 token.
      * @param token The ERC20 token for which to retrieve historical volatility.
