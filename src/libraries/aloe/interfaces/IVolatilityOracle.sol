@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "../libraries/Volatility.sol";
+
 
 /// From https://github.com/aloelabs/aloe-blend
 interface IVolatilityOracle {
@@ -49,6 +51,11 @@ interface IVolatilityOracle {
      * @param pool The Uniswap pool to poke
      */
     function cacheMetadataFor(IUniswapV3Pool pool) external;
+
+    /**
+     * @notice Gets metadata for a given V3 pool. Added to get IV without caching.
+     */
+    function getMetadataFor(IUniswapV3Pool pool) external view returns (Volatility.PoolMetadata memory);
 
     /**
      * @notice Provides multiple estimates of IV using all stored `feeGrowthGlobals` entries for `pool`

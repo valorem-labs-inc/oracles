@@ -48,6 +48,14 @@ contract VolatilityOracle is IVolatilityOracle {
     function cacheMetadataFor(IUniswapV3Pool pool) external {
         Volatility.PoolMetadata memory poolMetadata;
 
+        poolMetadata = getMetadataFor(pool); 
+
+        cachedPoolMetadata[pool] = poolMetadata;
+    }
+
+    function getMetadataFor(IUniswapV3Pool pool) public view returns (Volatility.PoolMetadata memory) {
+        Volatility.PoolMetadata memory poolMetadata;
+
         (,, uint16 observationIndex, uint16 observationCardinality,, uint8 feeProtocol,) = pool.slot0();
         poolMetadata.maxSecondsAgo = (Oracle.getMaxSecondsAgo(pool, observationIndex, observationCardinality) * 3) / 5;
 
@@ -62,8 +70,7 @@ contract VolatilityOracle is IVolatilityOracle {
         }
 
         poolMetadata.tickSpacing = pool.tickSpacing();
-
-        cachedPoolMetadata[pool] = poolMetadata;
+        return poolMetadata;
     }
 
     /// @inheritdoc IVolatilityOracle
