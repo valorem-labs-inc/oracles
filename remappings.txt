@@ -3,3 +3,4 @@ forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/src/
 v3-core/=lib/v3-core/
 valorem-core/=lib/valorem-core/src
+chainlink/=lib/chainlink

@@ -4,13 +4,19 @@ pragma solidity 0.8.13;
 import "../interfaces/IPriceOracleAdapter.sol";
 
 import "solmate/auth/authorities/MultiRolesAuthority.sol";
+import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @notice This contract adapts the chainlink price oracle
  */
 contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority {
-    constructor () {
+    AggregatorV3Interface public chainlinkPriceOracle;
 
+    constructor (address priceOracleAddress) 
+        MultiRolesAuthority(msg.sender, Authority(address(0))) 
+    {
+        setRoleCapability(0, ChainlinkPriceOracleAdapter.setChainlinkOracle.selector, true);
+        chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
     }
 
     /**
@@ -22,8 +28,9 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD
      */
-    function getPriceUSD(address token) external view returns (uint256 price) {
-
+    function getPriceUSD(address token) external view returns (int256 price) {
+        (, int256 price,,,) = priceFeed.latestRoundData();
+        return price;
     }
 
     /**
@@ -31,13 +38,14 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @return scale The power of 10 by which the return is scaled
      */
     function scale() external view returns (uint16 scale) {
-
+        uint8 decimals = chainlinkPriceOracle.decimals();
+        return uint16(decimals);
     }
 
     /**
     /////////////// ADMIN FUNCTIONS /////////////////
      */
-    function setChainlinkOracle() {
-
+    function setChainlinkOracle(address priceOracleAddress) requiresAuth {
+        chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
     }
 }
