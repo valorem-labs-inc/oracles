@@ -9,22 +9,53 @@ import "../libraries/aloe/VolatilityOracle.sol";
 import "v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import "solmate/auth/authorities/MultiRolesAuthority.sol";
+import "../utils/Keep3rV2Job.sol"
 
 /**
  * @notice This contract adapts the Aloe capital volatility oracle 
  * contract from https://github.com/aloelabs/aloe-blend.
  */
-contract AloeVolatilityOracleAdapter is IVolatilityOracleAdapter, MultiRolesAuthority {
+contract AloeVolatilityOracleAdapter is IVolatilityOracleAdapter, Keep3rV2Job {
+    /**
+    /////////// EVENTS /////////////
+     */
+    event setUniswapV3Factory(address v3Factory);
+
+    event setUniswapV3Pool(address pool, uint24 fee);
+
+    event setAloeOracle(address aloeOracle);
+
+    event setPriceOracle(address priceOracle);
+
+    event aloeVolatilityOracleUpdated(uint256 volatility, uint256 timestamp);
+
+    error InvalidUniswapV3Factory();
+
+    error InvalidUniswapV3Pool();
+
+    error InvalidAloeOracle();
+
+    error InvalidPriceOracle();
+
+    /**
+    /////////// STATE ////////////
+     */
     IUniswapV3Factory private uniswapV3Factory;
     IVolatilityOracle private aloeVolatilityOracle;
+
+    // comparison token, e.g. DAI
     address private v3PoolTokenB;
     uint24 private v3PoolRate;
 
-    constructor(address v3Factory, address aloeOracle)
+    // MultiRolesAuthority inehrited from Keep3rV2Job
+    constructor(address v3Factory, address aloeOracle, address keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
     {
         setRoleCapability(0, AloeVolatilityOracleAdapter.setUniswapV3Pool.selector, true);
+        setRoleCapability(0, AloeVolatilityOracleAdapter.setAloeOracle.selector, true);
+        setRoleCapability(0, AloeVolatilityOracleAdapter.setPriceOracle.selector, true);
+        setRoleCapability(0, AloeVolatilityOracleAdapter.setKeep3r.selector, true);
+
         uniswapV3Factory = IUniswapV3Factory(v3Factory);
         aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
     }
@@ -62,6 +93,11 @@ contract AloeVolatilityOracleAdapter is IVolatilityOracleAdapter, MultiRolesAuth
         return IUniswapV3Pool(pool);
     }
 
+    function refreshVolatilityCache() external validateAndPayKeeper {
+        uint256 iv = aloeVolatilityOracle.estimate24H();
+        emit aloeVolatilityOracleUpdated(iv, block.timestamp);
+    }
+
     /**
     /////////////// ADMIN FUNCTIONS ///////////////
      */
@@ -69,13 +105,16 @@ contract AloeVolatilityOracleAdapter is IVolatilityOracleAdapter, MultiRolesAuth
     function setUniswapV3Pool(address token, uint24 fee) external requiresAuth {
         v3PoolTokenB = token;
         v3PoolRate = fee;
+        emit setUniswapV3Pool(token, fee);
     }
 
     function setAloeOracle(address oracle) external requiresAuth {
         aloeVolatilityOracle = IVolatilityOracle(oracle);
+        emit setAloeOracle(oracle);
     }
 
     function setV3Factory(address factory) external requiresAuth {
         uniswapV3Factory = IUniswapV3Factory(factory);
+        emit setUniswapV3Factory(factory);
     }
 }
