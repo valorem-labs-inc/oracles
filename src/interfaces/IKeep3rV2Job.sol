@@ -9,4 +9,6 @@ interface IKeep3rV2Job {
     function getKeep3r() external view returns (address);
 
     function setKeep3r(address _keep3rAddress) external;
+
+    function work() external;
 }

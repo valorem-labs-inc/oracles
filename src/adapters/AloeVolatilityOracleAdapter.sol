@@ -26,6 +26,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     address private v3PoolTokenB;
     uint24 private v3PoolRate;
 
+
     // MultiRolesAuthority inehrited from Keep3rV2Job
     constructor(address v3Factory, address aloeOracle, address keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
@@ -38,6 +39,10 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
     }
 
+    /**
+     * /////////// IVolatilityOracleAdapter //////////
+     */
+
     /// @inheritdoc IVolatilityOracleAdapter
     function getHistoricalVolatility(address) external view returns (uint256) {
         revert("not implemented");
@@ -47,9 +52,8 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     function getImpliedVolatility(address token) external view returns (uint256 impliedVolatility) {
         IUniswapV3Pool pool = getV3PoolForTokenAddress(token);
         uint256[25] memory lens = aloeVolatilityOracle.lens(pool);
-
-        // todo: return ts
-        return lens[0];
+        (, uint8 idx) = aloeVolatilityOracle.feeGrowthGlobalsIndices(pool);
+        return lens[idx];
     }
 
     /// @inheritdoc IVolatilityOracleAdapter
@@ -64,8 +68,16 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     }
 
     /// @inheritdoc IAloeVolatilityOracleAdapter
-    function refreshVolatilityCache() external validateAndPayKeeper(msg.sender) returns (uint256) {
-        revert();
+    function refreshVolatilityCache() public returns (uint256) {
+        return _refreshVolatilityCache();
+    }
+
+    /**
+     * ////////////// KEEP3R ///////////////
+     */
+
+    function work() external validateAndPayKeeper(msg.sender) {
+        _refreshVolatilityCache();
     }
 
     /**
@@ -78,7 +90,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     }
 
     // inheritdoc IAloeVolatilityOracleAdapter
-    function getTokenRefreshList(address[] memory list) external view returns (address[] memory) {
+    function getTokenRefreshList() public view returns (address[] memory) {
         revert();
     }
 
@@ -111,5 +123,27 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         uniswapV3Factory = IUniswapV3Factory(factory);
         emit UniswapV3FactorySet(factory);
         return factory;
+    }
+
+    /**
+     * ///////// INTERNAL ///////////
+     */
+    function _refreshTokenVolatility(address token) internal returns (uint256 volatility, uint256 timestamp) {
+        IUniswapV3Pool pool = getV3PoolForTokenAddress(token);
+        uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
+        emit TokenVolatilityUpdated(token, impliedVolatility, block.timestamp);
+        return (impliedVolatility, block.timestamp);
+    }
+
+    function _refreshVolatilityCache() internal returns (uint256) {
+        address[] memory tokensToRefresh = getTokenRefreshList();
+
+        for (uint i = 0; i < tokensToRefresh.length; i++) {
+            address tokenToRefresh = tokensToRefresh[i];
+            _refreshTokenVolatility(tokenToRefresh);
+        }
+
+        emit AloeVolatilityOracleCacheUpdated(block.timestamp);
+        return block.timestamp;
     }
 }

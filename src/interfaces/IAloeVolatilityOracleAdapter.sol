@@ -88,10 +88,9 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
 
     /**
      * @notice Gets the list of tokens to periodically refresh for implied volatility.
-     * @param list The token refresh list.
      * @return The token refresh list.
      */
-    function getTokenRefreshList(address[] memory list) external view returns (address[] memory);
+    function getTokenRefreshList() external view returns (address[] memory);
 
     function addTokenToRefreshList(address token) external returns (address);
 
