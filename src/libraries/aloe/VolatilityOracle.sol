@@ -48,14 +48,6 @@ contract VolatilityOracle is IVolatilityOracle {
     function cacheMetadataFor(IUniswapV3Pool pool) external {
         Volatility.PoolMetadata memory poolMetadata;
 
-        poolMetadata = getMetadataFor(pool);
-
-        cachedPoolMetadata[pool] = poolMetadata;
-    }
-
-    function getMetadataFor(IUniswapV3Pool pool) public view returns (Volatility.PoolMetadata memory) {
-        Volatility.PoolMetadata memory poolMetadata;
-
         (,, uint16 observationIndex, uint16 observationCardinality,, uint8 feeProtocol,) = pool.slot0();
         poolMetadata.maxSecondsAgo = (Oracle.getMaxSecondsAgo(pool, observationIndex, observationCardinality) * 3) / 5;
 
@@ -70,7 +62,8 @@ contract VolatilityOracle is IVolatilityOracle {
         }
 
         poolMetadata.tickSpacing = pool.tickSpacing();
-        return poolMetadata;
+
+        cachedPoolMetadata[pool] = poolMetadata;
     }
 
     /// @inheritdoc IVolatilityOracle
@@ -121,14 +114,11 @@ contract VolatilityOracle is IVolatilityOracle {
         // Throws if secondsAgo == 0
         (int24 arithmeticMeanTick, uint160 secondsPerLiquidityX128) = Oracle.consult(_pool, secondsAgo);
 
-        current = Volatility.FeeGrowthGlobals(
-            _pool.feeGrowthGlobal0X128(), _pool.feeGrowthGlobal1X128(), uint32(block.timestamp)
-        );
+        current =
+            Volatility.FeeGrowthGlobals(_pool.feeGrowthGlobal0X128(), _pool.feeGrowthGlobal1X128(), uint32(block.timestamp));
         IV = Volatility.estimate24H(
             poolMetadata,
-            Volatility.PoolData(
-                _sqrtPriceX96, _tick, arithmeticMeanTick, secondsPerLiquidityX128, secondsAgo, _pool.liquidity()
-            ),
+            Volatility.PoolData(_sqrtPriceX96, _tick, arithmeticMeanTick, secondsPerLiquidityX128, secondsAgo, _pool.liquidity()),
             _previous,
             current
         );
