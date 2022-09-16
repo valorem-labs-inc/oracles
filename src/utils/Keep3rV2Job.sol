@@ -11,18 +11,22 @@ abstract contract Keep3rV2Job is IKeep3rV2Job, MultiRolesAuthority {
 
     // taken from https://docs.keep3r.network/core/jobs#simple-keeper
     modifier validateAndPayKeeper(address _keeper) {
-        _isValidKeep3r(_keeper);
+        _isValidKeeper(_keeper);
         _;
         IKeep3r(keep3r).worked(_keeper);
     }
 
-    function setKeep3r(address _keep3r) public onlyOwner {
+    function setKeep3r(address _keep3r) public requiresAuth {
         _setKeep3r(_keep3r);
+    }
+
+    function getKeep3r() public view returns (address) {
+        return keep3r;
     }
 
     function _setKeep3r(address _keep3r) internal {
         keep3r = _keep3r;
-        emit setKeep3r(_keep3r);
+        emit Keep3rSet(_keep3r);
     }
 
     function _isValidKeeper(address _keeper) internal {
