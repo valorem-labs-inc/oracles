@@ -29,7 +29,7 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @return price The price of the token in USD
      */
     function getPriceUSD(address token) external view returns (int256 price) {
-        (, int256 price,,,) = priceFeed.latestRoundData();
+        (, price,,,) = chainlinkPriceOracle.latestRoundData();
         return price;
     }
 
@@ -37,7 +37,7 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @notice Returns the scaling factor for the price
      * @return scale The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint16 scale) {
+    function scale() external view returns (uint16) {
         uint8 decimals = chainlinkPriceOracle.decimals();
         return uint16(decimals);
     }
@@ -45,7 +45,7 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
     /**
     /////////////// ADMIN FUNCTIONS /////////////////
      */
-    function setChainlinkOracle(address priceOracleAddress) requiresAuth {
+    function setChainlinkOracle(address priceOracleAddress) external requiresAuth {
         chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
     }
 }
