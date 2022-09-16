@@ -48,6 +48,9 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      */
     event TokenVolatilityUpdated(address token, uint256 volatility, uint256 timestamp);
 
+    /// @notice Emitted when the token refresh list is set.
+    event TokenRefreshListSet();
+
     /// @notice Thrown when the passed v3 factory address is invalid.
     error InvalidUniswapV3Factory();
 
@@ -92,7 +95,7 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      */
     function getTokenRefreshList() external view returns (address[] memory);
 
-    function addTokenToRefreshList(address token) external returns (address);
+    /// function addTokenToRefreshList(address token) external returns (address);
 
     /**
      * /////////////// ADMIN FUNCTIONS ///////////////
