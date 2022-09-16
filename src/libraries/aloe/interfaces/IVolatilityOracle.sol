@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "../libraries/Volatility.sol";
 
-
 /// From https://github.com/aloelabs/aloe-blend
 interface IVolatilityOracle {
     /**

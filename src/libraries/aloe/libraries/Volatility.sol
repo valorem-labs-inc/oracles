@@ -87,7 +87,9 @@ library Volatility {
         }
 
         uint128 sqrtTickTVLX32 = uint128(
-            FixedPointMathLib.sqrt(computeTickTVLX64(metadata.tickSpacing, data.currentTick, data.sqrtPriceX96, data.tickLiquidity))
+            FixedPointMathLib.sqrt(
+                computeTickTVLX64(metadata.tickSpacing, data.currentTick, data.sqrtPriceX96, data.tickLiquidity)
+            )
         );
         uint48 timeAdjustmentX32 = uint48(FixedPointMathLib.sqrt((uint256(1 days) << 64) / (b.timestamp - a.timestamp)));
 

@@ -12,12 +12,12 @@ import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "../utils/Keep3rV2Job.sol";
 
 /**
- * @notice This contract adapts the Aloe capital volatility oracle 
+ * @notice This contract adapts the Aloe capital volatility oracle
  * contract from https://github.com/aloelabs/aloe-blend.
  */
 contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Job {
     /**
-    /////////// STATE ////////////
+     * /////////// STATE ////////////
      */
     IUniswapV3Factory private uniswapV3Factory;
     IVolatilityOracle private aloeVolatilityOracle;
@@ -69,27 +69,27 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     }
 
     /**
-    ////////////// TOKEN REFRESH LIST ///////////////
+     * ////////////// TOKEN REFRESH LIST ///////////////
      */
 
-    // inheritdoc IAloeVolatilityOracleAdapter 
-    function setTokenRefreshList(address[] memory list) external returns(address[] memory){
+    // inheritdoc IAloeVolatilityOracleAdapter
+    function setTokenRefreshList(address[] memory list) external returns (address[] memory) {
         revert();
     }
 
-    // inheritdoc IAloeVolatilityOracleAdapter 
-    function getTokenRefreshList(address[] memory list) external view returns(address[] memory) {
+    // inheritdoc IAloeVolatilityOracleAdapter
+    function getTokenRefreshList(address[] memory list) external view returns (address[] memory) {
         revert();
     }
 
-    function addTokenToRefreshList(address token) external returns(address) {
+    function addTokenToRefreshList(address token) external returns (address) {
         revert();
     }
 
     /**
-    /////////////// ADMIN FUNCTIONS ///////////////
+     * /////////////// ADMIN FUNCTIONS ///////////////
      */
- 
+
     // TODO: Handle if token is invalid/no pool available?
     /// @inheritdoc IAloeVolatilityOracleAdapter
     function setUniswapV3Pool(address token, uint24 fee) external requiresAuth returns (address, uint24) {

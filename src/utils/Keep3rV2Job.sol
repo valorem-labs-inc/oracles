@@ -30,6 +30,8 @@ abstract contract Keep3rV2Job is IKeep3rV2Job, MultiRolesAuthority {
     }
 
     function _isValidKeeper(address _keeper) internal {
-        if (!IKeep3r(keep3r).isKeeper(_keeper)) revert InvalidKeeper();
+        if (!IKeep3r(keep3r).isKeeper(_keeper)) {
+            revert InvalidKeeper();
+        }
     }
 }
