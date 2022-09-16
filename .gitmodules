@@ -16,3 +16,6 @@
 [submodule "lib/keep3r-network-v2"]
 	path = lib/keep3r-network-v2
 	url = https://github.com/keep3r-network/keep3r-network-v2.git
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink.git
