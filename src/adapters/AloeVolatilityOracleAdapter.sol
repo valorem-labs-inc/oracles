@@ -26,9 +26,10 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     address private v3PoolTokenB;
     uint24 private v3PoolRate;
 
+    address[] private tokenRefreshList;
 
     // MultiRolesAuthority inehrited from Keep3rV2Job
-    constructor(address v3Factory, address aloeOracle, address keep3r)
+    constructor(address v3Factory, address aloeOracle, address _keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
     {
         setRoleCapability(0, AloeVolatilityOracleAdapter.setUniswapV3Pool.selector, true);
@@ -37,6 +38,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
 
         uniswapV3Factory = IUniswapV3Factory(v3Factory);
         aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
+        keep3r = _keep3r;
     }
 
     /**
@@ -44,7 +46,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      */
 
     /// @inheritdoc IVolatilityOracleAdapter
-    function getHistoricalVolatility(address) external view returns (uint256) {
+    function getHistoricalVolatility(address) external pure returns (uint256) {
         revert("not implemented");
     }
 
@@ -86,23 +88,20 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
 
     // inheritdoc IAloeVolatilityOracleAdapter
     function setTokenRefreshList(address[] memory list) external returns (address[] memory) {
-        revert();
+        tokenRefreshList = list;
+        emit TokenRefreshListSet();
+        return list;
     }
 
     // inheritdoc IAloeVolatilityOracleAdapter
     function getTokenRefreshList() public view returns (address[] memory) {
-        revert();
-    }
-
-    function addTokenToRefreshList(address token) external returns (address) {
-        revert();
+        return tokenRefreshList;
     }
 
     /**
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
 
-    // TODO: Handle if token is invalid/no pool available?
     /// @inheritdoc IAloeVolatilityOracleAdapter
     function setUniswapV3Pool(address token, uint24 fee) external requiresAuth returns (address, uint24) {
         v3PoolTokenB = token;
