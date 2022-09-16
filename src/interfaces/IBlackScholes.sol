@@ -2,7 +2,7 @@
 pragma solidity 0.8.13;
 
 import "./IVolatilityOracleAdapter.sol";
-import "./IPriceOracle.sol";
+import "./IPriceOracleAdapter.sol";
 import "./IYieldOracle.sol";
 
 import "valorem-core/interfaces/IOptionSettlementEngine.sol";
@@ -25,7 +25,7 @@ interface IBlackScholes {
     function getLongCallPremiumEx(
         uint256 optionId,
         IVolatilityOracleAdapter volatilityOracle,
-        IPriceOracle priceOracle,
+        IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
@@ -36,7 +36,7 @@ interface IBlackScholes {
     function getShortCallPremiumEx(
         uint256 optionId,
         IVolatilityOracleAdapter volatilityOracle,
-        IPriceOracle priceOracle,
+        IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
@@ -52,7 +52,7 @@ interface IBlackScholes {
     /**
      * @notice sets the oracle from which to retrieve the underlying asset price
      */
-    function setPriceOracle(IPriceOracle oracle) external;
+    function setPriceOracle(IPriceOracleAdapter oracle) external;
 
     /**
      * @notice sets the yield oracle for the risk free rate
