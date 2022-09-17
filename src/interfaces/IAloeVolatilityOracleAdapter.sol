@@ -12,6 +12,15 @@ import "../utils/Keep3rV2Job.sol";
  */
 interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
     /**
+     * ////////// STRUCTS /////////////
+     */
+    struct UniswapV3PoolInfo {
+        address tokenA;
+        address tokenB;
+        IVolatilityOracleAdapter.UniswapV3FeeTier feeTier;
+    }
+
+    /**
      * /////////// EVENTS /////////////
      */
 
@@ -20,13 +29,6 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      * @param v3Factory The address of the uniswap v3 factory contract.
      */
     event UniswapV3FactorySet(address v3Factory);
-
-    /**
-     * @notice Emitted when the fee and comparison token for the v3 pool are set.
-     * @param token One of the ERC20 token addresses for the v3 pool.
-     * @param fee The fee rate for the uniswap v3 pool.
-     */
-    event UniswapV3PoolSet(address token, uint24 fee);
 
     /**
      * @notice Emitted when the Aloe volatility oracle contract address is set.
@@ -42,11 +44,13 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
 
     /**
      * @notice Emitted when the implied volatility for a given token is updated.
-     * @param token The ERC20 contract address of the token.
+     * @param tokenA The ERC20 contract address of the token.
+     * @param tokenB The ERC20 contract address of the token.
+     * @param feeTier The UniswapV3 fee tier.
      * @param volatility The implied volatility of the token.
      * @param timestamp The timestamp of the refresh.
      */
-    event TokenVolatilityUpdated(address token, uint256 volatility, uint256 timestamp);
+    event TokenVolatilityUpdated(address tokenA, address tokenB, uint24 feeTier, uint256 volatility, uint256 timestamp);
 
     /// @notice Emitted when the token refresh list is set.
     event TokenRefreshListSet();
@@ -67,10 +71,15 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
     /**
      * @notice Retrieves the uniswap v3 pool for passed ERC20 address plus arguments
      * from setUniswapV3Pool.
-     * @param token The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param tokenA The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param tokenB The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param fee The fee tier for the pool in 1/100ths of a bip.
      * @return pool The uniswap v3 pool for the supplied token.
      */
-    function getV3PoolForTokenAddress(address token) external view returns (IUniswapV3Pool pool);
+    function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
+        external
+        view
+        returns (IUniswapV3Pool pool);
 
     /**
      * @notice Updates the cached implied volatility for the tokens in the refresh list.
@@ -83,31 +92,25 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      */
 
     /**
-     * @notice Sets the list of tokens to periodically refresh for implied volatility.
+     * @notice Sets the list of tokens and fees to periodically refresh for implied volatility.
      * @param list The token refresh list.
      * @return The token refresh list.
      */
-    function setTokenRefreshList(address[] memory list) external returns (address[] memory);
+    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] memory list)
+        external
+        returns (UniswapV3PoolInfo[] memory);
 
     /**
-     * @notice Gets the list of tokens to periodically refresh for implied volatility.
+     * @notice Gets the list of tokens and fees to periodically refresh for implied volatility.
      * @return The token refresh list.
      */
-    function getTokenRefreshList() external view returns (address[] memory);
+    function getTokenFeeTierRefreshList() external view returns (UniswapV3PoolInfo[] memory);
 
     /// function addTokenToRefreshList(address token) external returns (address);
 
     /**
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
-
-    /**
-     * @notice Sets the comparison token (e.g. DAI) and fee rate for the uniswap v3 pool.
-     * @param token The ERC20 contract address for the comparison token.
-     * @param fee The uniswap v3 pool fee rate.
-     * @return The token address and fee.
-     */
-    function setUniswapV3Pool(address token, uint24 fee) external returns (address, uint24);
 
     /**
      * @notice Sets the uniswap v3 factory contract address.

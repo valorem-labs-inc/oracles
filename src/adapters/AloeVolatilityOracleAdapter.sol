@@ -17,24 +17,26 @@ import "../utils/Keep3rV2Job.sol";
  */
 contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Job {
     /**
+     * /////////// CONSTANTS ////////////
+     */
+    uint24 private constant POINT_ZERO_ONE_PCT_FEE = 1 * 100;
+    uint24 private constant POINT_THREE_PCT_FEE = 3 * 100 * 10;
+    uint24 private constant POINT_ZERO_FIVE_PCT_FEE = 5 * 100;
+
+    /**
      * /////////// STATE ////////////
      */
     IUniswapV3Factory private uniswapV3Factory;
     IVolatilityOracle private aloeVolatilityOracle;
 
-    // comparison token, e.g. DAI
-    address private v3PoolTokenB;
-    uint24 private v3PoolRate;
-
-    address[] private tokenRefreshList;
+    IAloeVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
     // MultiRolesAuthority inehrited from Keep3rV2Job
     constructor(address v3Factory, address aloeOracle, address _keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
     {
-        setRoleCapability(0, AloeVolatilityOracleAdapter.setUniswapV3Pool.selector, true);
-        setRoleCapability(0, AloeVolatilityOracleAdapter.setAloeOracle.selector, true);
-        setRoleCapability(0, Keep3rV2Job.setKeep3r.selector, true);
+        setRoleCapability(0, IAloeVolatilityOracleAdapter.setAloeOracle.selector, true);
+        setRoleCapability(0, IKeep3rV2Job.setKeep3r.selector, true);
 
         uniswapV3Factory = IUniswapV3Factory(v3Factory);
         aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
@@ -51,8 +53,13 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     }
 
     /// @inheritdoc IVolatilityOracleAdapter
-    function getImpliedVolatility(address token) external view returns (uint256 impliedVolatility) {
-        IUniswapV3Pool pool = getV3PoolForTokenAddress(token);
+    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        external
+        view
+        returns (uint256 impliedVolatility)
+    {
+        uint24 fee = _getUniswapV3FeeInHundredthsOfBip(tier);
+        IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
         uint256[25] memory lens = aloeVolatilityOracle.lens(pool);
         (, uint8 idx) = aloeVolatilityOracle.feeGrowthGlobalsIndices(pool);
         return lens[idx];
@@ -64,8 +71,12 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     }
 
     /// @inheritdoc IAloeVolatilityOracleAdapter
-    function getV3PoolForTokenAddress(address token) public view returns (IUniswapV3Pool) {
-        address pool = uniswapV3Factory.getPool(token, v3PoolTokenB, v3PoolRate);
+    function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
+        public
+        view
+        returns (IUniswapV3Pool pool)
+    {
+        address pool = uniswapV3Factory.getPool(tokenA, tokenB, fee);
         return IUniswapV3Pool(pool);
     }
 
@@ -87,28 +98,27 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      */
 
     // inheritdoc IAloeVolatilityOracleAdapter
-    function setTokenRefreshList(address[] memory list) external returns (address[] memory) {
-        tokenRefreshList = list;
+    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] memory list)
+        external
+        returns (UniswapV3PoolInfo[] memory)
+    {
+        delete tokenFeeTierList;
+        for (uint256 i = 0; i < list.length; i++) {
+            UniswapV3PoolInfo memory pair = list[i];
+            tokenFeeTierList.push(pair);
+        }
         emit TokenRefreshListSet();
         return list;
     }
 
     // inheritdoc IAloeVolatilityOracleAdapter
-    function getTokenRefreshList() public view returns (address[] memory) {
-        return tokenRefreshList;
+    function getTokenFeeTierRefreshList() public view returns (UniswapV3PoolInfo[] memory) {
+        return tokenFeeTierList;
     }
 
     /**
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
-
-    /// @inheritdoc IAloeVolatilityOracleAdapter
-    function setUniswapV3Pool(address token, uint24 fee) external requiresAuth returns (address, uint24) {
-        v3PoolTokenB = token;
-        v3PoolRate = fee;
-        emit UniswapV3PoolSet(token, fee);
-        return (token, fee);
-    }
 
     /// @inheritdoc IAloeVolatilityOracleAdapter
     function setAloeOracle(address oracle) external requiresAuth returns (address) {
@@ -127,23 +137,33 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     /**
      * ///////// INTERNAL ///////////
      */
-    function _refreshTokenVolatility(address token) internal returns (uint256 volatility, uint256 timestamp) {
-        IUniswapV3Pool pool = getV3PoolForTokenAddress(token);
-        aloeVolatilityOracle.cacheMetadataFor(pool);
-        uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
-        emit TokenVolatilityUpdated(token, impliedVolatility, block.timestamp);
-        return (impliedVolatility, block.timestamp);
-    }
-
     function _refreshVolatilityCache() internal returns (uint256) {
-        address[] memory tokensToRefresh = getTokenRefreshList();
+        UniswapV3PoolInfo[] memory tokensToRefresh = getTokenFeeTierRefreshList();
 
-        for (uint i = 0; i < tokensToRefresh.length; i++) {
-            address tokenToRefresh = tokensToRefresh[i];
-            _refreshTokenVolatility(tokenToRefresh);
+        for (uint256 i = 0; i < tokensToRefresh.length; i++) {
+            address tokenA = tokensToRefresh[i].tokenA;
+            address tokenB = tokensToRefresh[i].tokenB;
+            UniswapV3FeeTier feeTier = tokensToRefresh[i].feeTier;
+            _refreshTokenVolatility(tokenA, tokenB, feeTier);
         }
 
         emit AloeVolatilityOracleCacheUpdated(block.timestamp);
         return block.timestamp;
+    }
+
+    function _refreshTokenVolatility(address tokenA, address tokenB, UniswapV3FeeTier feeTier)
+        internal
+        returns (uint256 volatility, uint256 timestamp)
+    {
+        uint24 fee = _getUniswapV3FeeInHundredthsOfBip(feeTier);
+        IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
+        aloeVolatilityOracle.cacheMetadataFor(pool);
+        uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
+        emit TokenVolatilityUpdated(tokenA, tokenB, fee, impliedVolatility, block.timestamp);
+        return (impliedVolatility, block.timestamp);
+    }
+
+    function _getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) internal view returns (uint24) {
+        return 0;
     }
 }
