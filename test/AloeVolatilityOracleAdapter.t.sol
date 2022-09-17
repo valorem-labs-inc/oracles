@@ -40,18 +40,26 @@ contract AloeVolatilityOracleAdapterTest is Test {
             KEEP3R_ADDRESS);
 
         delete defaultTokenRefreshList;
-        defaultTokenRefreshList.push(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-            USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
-        ));
-        defaultTokenRefreshList.push(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-            MATIC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
-        ));
-        defaultTokenRefreshList.push(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-            LINK_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
-        ));
-        defaultTokenRefreshList.push(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-            WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_05
-        ));
+        defaultTokenRefreshList.push(
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
+                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+            )
+        );
+        defaultTokenRefreshList.push(
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
+                MATIC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+            )
+        );
+        defaultTokenRefreshList.push(
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
+                LINK_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+            )
+        );
+        defaultTokenRefreshList.push(
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
+                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_05
+            )
+        );
     }
 
     function testSetUniswapV3Pool() public {
