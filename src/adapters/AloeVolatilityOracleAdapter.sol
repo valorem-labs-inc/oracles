@@ -76,8 +76,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         view
         returns (IUniswapV3Pool pool)
     {
-        address pool = uniswapV3Factory.getPool(tokenA, tokenB, fee);
-        return IUniswapV3Pool(pool);
+        pool = IUniswapV3Pool(uniswapV3Factory.getPool(tokenA, tokenB, fee));
     }
 
     /// @inheritdoc IAloeVolatilityOracleAdapter
@@ -97,21 +96,20 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      * ////////////// TOKEN REFRESH LIST ///////////////
      */
 
-    // inheritdoc IAloeVolatilityOracleAdapter
-    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] memory list)
+    /// @inheritdoc IAloeVolatilityOracleAdapter
+    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
         returns (UniswapV3PoolInfo[] memory)
     {
         delete tokenFeeTierList;
         for (uint256 i = 0; i < list.length; i++) {
-            UniswapV3PoolInfo memory pair = list[i];
-            tokenFeeTierList.push(pair);
+            tokenFeeTierList.push(UniswapV3PoolInfo(list[i].tokenA, list[i].tokenB, list[i].feeTier));
         }
         emit TokenRefreshListSet();
         return list;
     }
 
-    // inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IAloeVolatilityOracleAdapter
     function getTokenFeeTierRefreshList() public view returns (UniswapV3PoolInfo[] memory) {
         return tokenFeeTierList;
     }
@@ -138,12 +136,10 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      * ///////// INTERNAL ///////////
      */
     function _refreshVolatilityCache() internal returns (uint256) {
-        UniswapV3PoolInfo[] memory tokensToRefresh = getTokenFeeTierRefreshList();
-
-        for (uint256 i = 0; i < tokensToRefresh.length; i++) {
-            address tokenA = tokensToRefresh[i].tokenA;
-            address tokenB = tokensToRefresh[i].tokenB;
-            UniswapV3FeeTier feeTier = tokensToRefresh[i].feeTier;
+        for (uint256 i = 0; i < tokenFeeTierList.length; i++) {
+            address tokenA = tokenFeeTierList[i].tokenA;
+            address tokenB = tokenFeeTierList[i].tokenB;
+            UniswapV3FeeTier feeTier = tokenFeeTierList[i].feeTier;
             _refreshTokenVolatility(tokenA, tokenB, feeTier);
         }
 
@@ -163,7 +159,18 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         return (impliedVolatility, block.timestamp);
     }
 
-    function _getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) internal view returns (uint24) {
-        return 0;
+    function _getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) internal pure returns (uint24) {
+        if (tier == UniswapV3FeeTier.PCT_POINT_01) {
+            return 1 * 100;
+        }
+        if (tier == UniswapV3FeeTier.PCT_POINT_05) {
+            return 5 * 100;
+        }
+        if (tier == UniswapV3FeeTier.PCT_POINT_3) {
+            return 3 * 100 * 10;
+        }
+        if (tier == UniswapV3FeeTier.PCT_1) {
+            return 100 * 100;
+        }
     }
 }
