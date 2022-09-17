@@ -92,7 +92,6 @@ contract AloeVolatilityOracleAdapterTest is Test {
     function testTokenVolatilityRefresh() public {
         // TODO: Add error if v3 pool not set
         aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
-        emit LogAddress("aloeVolatilityOracle", address(volatilityOracle));
         uint256 ts = aloeAdapter.refreshVolatilityCache();
         assertEq(ts, block.timestamp);
     }
