@@ -129,6 +129,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      */
     function _refreshTokenVolatility(address token) internal returns (uint256 volatility, uint256 timestamp) {
         IUniswapV3Pool pool = getV3PoolForTokenAddress(token);
+        aloeVolatilityOracle.cacheMetadataFor(pool);
         uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
         emit TokenVolatilityUpdated(token, impliedVolatility, block.timestamp);
         return (impliedVolatility, block.timestamp);

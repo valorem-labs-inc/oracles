@@ -7,6 +7,10 @@ import "../src/libraries/aloe/VolatilityOracle.sol";
 import "../src/adapters/AloeVolatilityOracleAdapter.sol";
 
 contract AloeVolatilityOracleAdapterTest is Test {
+    event LogString(string topic, uint256 info);
+    event LogAddress(string topic, address info);
+
+
     VolatilityOracle public volatilityOracle;
     address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
     address private constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
@@ -41,8 +45,12 @@ contract AloeVolatilityOracleAdapterTest is Test {
         defaultTokenRefreshList[3] = WETH_ADDRESS;
     }
 
-    function testSetUniswapV3Pool() public {
+    modifier defaultPool() {
         aloeAdapter.setUniswapV3Pool(DAI_ADDRESS, POINT_ZERO_ONE_PCT_FEE);
+        _;
+    }
+
+    function testSetUniswapV3Pool() public defaultPool {
         IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokenAddress(USDC_ADDRESS);
         assertEq(address(pool), 0x5777d92f208679DB4b9778590Fa3CAB3aC9e2168);
 
@@ -65,5 +73,13 @@ contract AloeVolatilityOracleAdapterTest is Test {
         returnedRefreshList = aloeAdapter.getTokenRefreshList();
         assertFalse(returnedRefreshList[3] == WETH_ADDRESS);
         assertEq(defaultTokenRefreshList, returnedRefreshList);
+    }
+
+    function testTokenVolatilityRefresh() public defaultPool {
+        // TODO: Add error if v3 pool not set
+        aloeAdapter.setTokenRefreshList(defaultTokenRefreshList);
+        emit LogAddress("aloeVolatilityOracle", address(volatilityOracle));
+        uint256 ts = aloeAdapter.refreshVolatilityCache();
+        assertEq(ts, block.timestamp);
     }
 }
