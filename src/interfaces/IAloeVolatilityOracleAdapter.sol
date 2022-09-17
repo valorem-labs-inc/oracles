@@ -96,7 +96,7 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      * @param list The token refresh list.
      * @return The token refresh list.
      */
-    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] memory list)
+    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
         returns (UniswapV3PoolInfo[] memory);
 
