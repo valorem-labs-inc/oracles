@@ -96,6 +96,16 @@ contract AloeVolatilityOracleAdapterTest is Test {
         assertEq(ts, block.timestamp);
     }
 
+    function testGetImpliedVolatility() public {
+        aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        _cache1d();
+
+        for (uint i = 0; i < defaultTokenRefreshList.length; i++) {
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
+            _validateCachedVolatilityForPool(poolInfo);
+        }
+    }
+
     /**
      * ///////// HELPERS //////////
      */
@@ -109,6 +119,22 @@ contract AloeVolatilityOracleAdapterTest is Test {
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [UniswapV3PoolInfo[]]");
             fail();
+        }
+    }
+
+    function _validateCachedVolatilityForPool(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo) internal {
+        address tokenA = poolInfo.tokenA;
+        address tokenB = poolInfo.tokenB;
+        IVolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
+        uint256 iv = aloeAdapter.getImpliedVolatility(tokenA, tokenB, feeTier);
+        // assertFalse(iv == 0, "Volatility is expected to have been refreshed");
+    }
+
+    function _cache1d() internal {
+        // refresh list is assumed to have already been populated
+        for (uint i = 0; i < 25; i++) {
+            aloeAdapter.refreshVolatilityCache();
+            vm.warp(block.timestamp + 61 minutes);
         }
     }
 }
