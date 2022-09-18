@@ -114,11 +114,14 @@ contract VolatilityOracle is IVolatilityOracle {
         // Throws if secondsAgo == 0
         (int24 arithmeticMeanTick, uint160 secondsPerLiquidityX128) = Oracle.consult(_pool, secondsAgo);
 
-        current =
-            Volatility.FeeGrowthGlobals(_pool.feeGrowthGlobal0X128(), _pool.feeGrowthGlobal1X128(), uint32(block.timestamp));
+        current = Volatility.FeeGrowthGlobals(
+            _pool.feeGrowthGlobal0X128(), _pool.feeGrowthGlobal1X128(), uint32(block.timestamp)
+        );
         IV = Volatility.estimate24H(
             poolMetadata,
-            Volatility.PoolData(_sqrtPriceX96, _tick, arithmeticMeanTick, secondsPerLiquidityX128, secondsAgo, _pool.liquidity()),
+            Volatility.PoolData(
+                _sqrtPriceX96, _tick, arithmeticMeanTick, secondsPerLiquidityX128, secondsAgo, _pool.liquidity()
+            ),
             _previous,
             current
         );

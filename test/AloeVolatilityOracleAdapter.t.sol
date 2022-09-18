@@ -100,7 +100,7 @@ contract AloeVolatilityOracleAdapterTest is Test {
         aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         _cache1d();
 
-        for (uint i = 0; i < defaultTokenRefreshList.length; i++) {
+        for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
             _validateCachedVolatilityForPool(poolInfo);
         }
@@ -122,7 +122,9 @@ contract AloeVolatilityOracleAdapterTest is Test {
         }
     }
 
-    function _validateCachedVolatilityForPool(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo) internal {
+    function _validateCachedVolatilityForPool(IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo)
+        internal
+    {
         address tokenA = poolInfo.tokenA;
         address tokenB = poolInfo.tokenB;
         IVolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
@@ -132,7 +134,7 @@ contract AloeVolatilityOracleAdapterTest is Test {
 
     function _cache1d() internal {
         // refresh list is assumed to have already been populated
-        for (uint i = 0; i < 25; i++) {
+        for (uint256 i = 0; i < 25; i++) {
             aloeAdapter.refreshVolatilityCache();
             vm.warp(block.timestamp + 61 minutes);
         }
