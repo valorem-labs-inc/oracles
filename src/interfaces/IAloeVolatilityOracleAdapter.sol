@@ -82,6 +82,13 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
         returns (IUniswapV3Pool pool);
 
     /**
+     * @notice Retrieves the uniswap fee in 1/100ths of a bip.
+     * @param tier The fee tier enum.
+     * @return The fee in 1/100ths of a bip.
+     */
+    function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) external pure returns (uint24);
+
+    /**
      * @notice Updates the cached implied volatility for the tokens in the refresh list.
      * @return timestamp The timestamp of the cache refresh.
      */

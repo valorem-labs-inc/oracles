@@ -58,7 +58,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         view
         returns (uint256 impliedVolatility)
     {
-        uint24 fee = _getUniswapV3FeeInHundredthsOfBip(tier);
+        uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
         uint256[25] memory lens = aloeVolatilityOracle.lens(pool);
         (, uint8 idx) = aloeVolatilityOracle.feeGrowthGlobalsIndices(pool);
@@ -132,6 +132,22 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         return factory;
     }
 
+    /// @inheritdoc IAloeVolatilityOracleAdapter
+    function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) public pure returns (uint24) {
+        if (tier == UniswapV3FeeTier.PCT_POINT_01) {
+            return 1 * 100;
+        }
+        if (tier == UniswapV3FeeTier.PCT_POINT_05) {
+            return 5 * 100;
+        }
+        if (tier == UniswapV3FeeTier.PCT_POINT_3) {
+            return 3 * 100 * 10;
+        }
+        if (tier == UniswapV3FeeTier.PCT_1) {
+            return 100 * 100;
+        }
+    }
+
     /**
      * ///////// INTERNAL ///////////
      */
@@ -151,26 +167,11 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         internal
         returns (uint256 volatility, uint256 timestamp)
     {
-        uint24 fee = _getUniswapV3FeeInHundredthsOfBip(feeTier);
+        uint24 fee = getUniswapV3FeeInHundredthsOfBip(feeTier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
         aloeVolatilityOracle.cacheMetadataFor(pool);
         uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
         emit TokenVolatilityUpdated(tokenA, tokenB, fee, impliedVolatility, block.timestamp);
         return (impliedVolatility, block.timestamp);
-    }
-
-    function _getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) internal pure returns (uint24) {
-        if (tier == UniswapV3FeeTier.PCT_POINT_01) {
-            return 1 * 100;
-        }
-        if (tier == UniswapV3FeeTier.PCT_POINT_05) {
-            return 5 * 100;
-        }
-        if (tier == UniswapV3FeeTier.PCT_POINT_3) {
-            return 3 * 100 * 10;
-        }
-        if (tier == UniswapV3FeeTier.PCT_1) {
-            return 100 * 100;
-        }
     }
 }
