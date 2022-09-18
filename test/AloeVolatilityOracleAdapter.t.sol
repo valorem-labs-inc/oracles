@@ -2,15 +2,26 @@
 pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
+import "v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 
 import "../src/libraries/aloe/VolatilityOracle.sol";
 import "../src/adapters/AloeVolatilityOracleAdapter.sol";
 
 import "../src/interfaces/IVolatilityOracleAdapter.sol";
 
-contract AloeVolatilityOracleAdapterTest is Test {
-    event LogString(string topic, uint256 info);
+/// for writeBalance
+interface IERC20 {
+    function balanceOf(address) external view returns (uint256);
+
+    function transfer(address to, uint256 amount) external returns (bool);
+}
+
+contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
+    using stdStorage for StdStorage;
+
+    event LogString(string topic);
     event LogAddress(string topic, address info);
+    event LogUint(string topic, uint info);
 
     VolatilityOracle public volatilityOracle;
     address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
@@ -27,6 +38,12 @@ contract AloeVolatilityOracleAdapterTest is Test {
     uint24 private constant POINT_ZERO_FIVE_PCT_FEE = 5 * 100;
     uint24 private constant POINT_THREE_PCT_FEE = 3 * 100 * 10;
 
+    /// @dev The minimum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MIN_TICK)
+    uint160 internal constant MIN_SQRT_RATIO = 4295128739;
+    /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
+    uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
+
+
     AloeVolatilityOracleAdapter public aloeAdapter;
 
     IAloeVolatilityOracleAdapter.UniswapV3PoolInfo[] private defaultTokenRefreshList;
@@ -38,6 +55,8 @@ contract AloeVolatilityOracleAdapterTest is Test {
             UNISWAP_FACTORY_ADDRESS, 
             address(volatilityOracle),
             KEEP3R_ADDRESS);
+
+        vm.makePersistent(address(volatilityOracle), address(aloeAdapter));
 
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
@@ -99,11 +118,29 @@ contract AloeVolatilityOracleAdapterTest is Test {
     function testGetImpliedVolatility() public {
         aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         _cache1d();
-
+        emit LogString("cached one day");
         for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
             _validateCachedVolatilityForPool(poolInfo);
         }
+    }
+
+    /** 
+     * /////////// IUniswapV3SwapCallback /////////////
+     */
+
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) public 
+    {
+        // only ever transferring DAI to the pool
+        int256 amountToTransfer = amount0Delta + amount0Delta;
+
+        emit LogUint("uniswap swap callback, transfer DAI", uint256(amountToTransfer));
+        address poolAddr = _bytesToAddress(data);
+        IERC20(DAI_ADDRESS).transfer(poolAddr, uint256(amountToTransfer));
     }
 
     /**
@@ -133,10 +170,55 @@ contract AloeVolatilityOracleAdapterTest is Test {
     }
 
     function _cache1d() internal {
-        // refresh list is assumed to have already been populated
-        for (uint256 i = 0; i < 25; i++) {
+        uint avgBlockTime = 13; // seconds
+        uint startingBlock = 15441384;
+        uint blocksPerHour = 1 hours / avgBlockTime;
+
+        // get 24 forks for 24 hours
+        for (uint i = 0; i < 24; i++) {
             aloeAdapter.refreshVolatilityCache();
-            vm.warp(block.timestamp + 61 minutes);
+            vm.roll(block.number + blocksPerHour);
+            vm.warp(block.timestamp + 1 hours + 1);
+
+            // fuzz trades
+            _simulateUniswapMovements();
+        }
+        aloeAdapter.refreshVolatilityCache();
+    }
+
+    function _simulateUniswapMovements() internal {
+        // add tokens to this contract
+        _writeTokenBalance(address(this), address(DAI_ADDRESS), 1_000_000_000 ether);
+
+        // iterate pools
+        for (uint i = 0; i < defaultTokenRefreshList.length; i++) {
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo memory poolInfo = defaultTokenRefreshList[i];
+            uint24 fee = aloeAdapter.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
+            IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokensAndFee(
+                poolInfo.tokenA, poolInfo.tokenB, fee);
+            bool zeroForOne = pool.token0() == DAI_ADDRESS; 
+            // swap 1K tokens on each pool
+            pool.swap(
+                address(this),
+                zeroForOne,
+                1_000 ether,
+                zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
+                abi.encodePacked(address(pool)));
         }
     }
+
+    function _writeTokenBalance(address who, address token, uint256 amt) internal {
+        stdstore
+            .target(token)
+            .sig(IERC20(token).balanceOf.selector)
+            .with_key(who)
+            .checked_write(amt);
+    }
+
+    function _bytesToAddress(bytes memory bys) internal pure returns (address addr) {
+        assembly {
+            addr := mload(add(bys, 0x14))
+        } 
+    }
+    // TODO: Keep3r tests
 }
