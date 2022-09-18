@@ -57,7 +57,7 @@ contract AloeVolatilityOracleAdapterTest is Test {
         );
         defaultTokenRefreshList.push(
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_05
+                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
             )
         );
     }
