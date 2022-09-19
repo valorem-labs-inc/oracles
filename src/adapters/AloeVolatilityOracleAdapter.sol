@@ -37,6 +37,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     {
         setRoleCapability(0, IAloeVolatilityOracleAdapter.setAloeOracle.selector, true);
         setRoleCapability(0, IKeep3rV2Job.setKeep3r.selector, true);
+        setRoleCapability(0, IAloeVolatilityOracleAdapter.setTokenFeeTierRefreshList.selector, true);
 
         uniswapV3Factory = IUniswapV3Factory(v3Factory);
         aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
