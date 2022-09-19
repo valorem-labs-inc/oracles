@@ -16,7 +16,7 @@ interface IPriceOracleAdapter {
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD
      */
-    function getPriceUSD(address token) external view returns (int256 price);
+    function getPriceUSD(address token) external view returns (uint256 price);
 
     /**
      * @notice Returns the scaling factor for the price

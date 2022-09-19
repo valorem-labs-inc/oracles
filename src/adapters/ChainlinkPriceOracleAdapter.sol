@@ -26,9 +26,9 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD
      */
-    function getPriceUSD(address token) external view returns (int256 price) {
-        (, price,,,) = chainlinkPriceOracle.latestRoundData();
-        return price;
+    function getPriceUSD(address token) external view returns (uint256) {
+        (, int256 price,,,) = chainlinkPriceOracle.latestRoundData();
+        return uint256(price);
     }
 
     /**
