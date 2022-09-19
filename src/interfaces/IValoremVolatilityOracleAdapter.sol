@@ -10,7 +10,7 @@ import "../utils/Keep3rV2Job.sol";
  * @notice This contract adapts the Aloe capital volatility oracle
  * contract from https://github.com/aloelabs/aloe-blend.
  */
-interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
+interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
     /**
      * ////////// STRUCTS /////////////
      */
@@ -31,16 +31,16 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
     event UniswapV3FactorySet(address v3Factory);
 
     /**
-     * @notice Emitted when the Aloe volatility oracle contract address is set.
-     * @param aloeOracle The contract address for the aloe oracle.
+     * @notice Emitted when the volatility oracle contract address is set.
+     * @param oracle The contract address for the oracle.
      */
-    event AloeOracleSet(address aloeOracle);
+    event VolatilityOracleSet(address oracle);
 
     /**
      * @notice Emitted when the implied volatility cache is updated.
      * @param timestamp The timestamp of when the cache is updated.
      */
-    event AloeVolatilityOracleCacheUpdated(uint256 timestamp);
+    event VolatilityOracleCacheUpdated(uint256 timestamp);
 
     /**
      * @notice Emitted when the implied volatility for a given token is updated.
@@ -61,8 +61,8 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
     /// @notice Thrown when invalid parameters are passed to setUniswapV3Pool.
     error InvalidUniswapV3Pool();
 
-    /// @notice Thrown when the passed Aloe volatility oracle address is invalid.
-    error InvalidAloeOracle();
+    /// @notice Thrown when the passed volatility oracle address is invalid.
+    error InvalidVolatilityOracle();
 
     /**
      * ////////// HELPERS ///////////
@@ -136,9 +136,9 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
     function setV3Factory(address factory) external returns (address);
 
     /**
-     * @notice Sets the aloe voltaility oracle contract address.
-     * @param oracle The contract address for the aloe volatility oracle.
-     * @return The contract address for the aloe volatility oracle.
+     * @notice Sets the voltaility oracle contract address.
+     * @param oracle The contract address for the volatility oracle.
+     * @return The contract address for the volatility oracle.
      */
-    function setAloeOracle(address oracle) external returns (address);
+    function setVolatilityOracle(address oracle) external returns (address);
 }

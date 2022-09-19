@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "../interfaces/IAloeVolatilityOracleAdapter.sol";
+import "../interfaces/IValoremVolatilityOracleAdapter.sol";
 
 import "../libraries/aloe/interfaces/IVolatilityOracle.sol";
 import "../libraries/aloe/VolatilityOracle.sol";
@@ -15,7 +15,7 @@ import "../utils/Keep3rV2Job.sol";
  * @notice This contract adapts the Aloe capital volatility oracle
  * contract from https://github.com/aloelabs/aloe-blend.
  */
-contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Job {
+contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep3rV2Job {
     /**
      * /////////// CONSTANTS ////////////
      */
@@ -27,20 +27,20 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      * /////////// STATE ////////////
      */
     IUniswapV3Factory private uniswapV3Factory;
-    IVolatilityOracle private aloeVolatilityOracle;
+    IVolatilityOracle private volatilityOracle;
 
-    IAloeVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
+    IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
     // MultiRolesAuthority inehrited from Keep3rV2Job
-    constructor(address v3Factory, address aloeOracle, address _keep3r)
+    constructor(address v3Factory, address _volatilityOracle, address _keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
     {
-        setRoleCapability(0, IAloeVolatilityOracleAdapter.setAloeOracle.selector, true);
+        setRoleCapability(0, IValoremVolatilityOracleAdapter.setVolatilityOracle.selector, true);
         setRoleCapability(0, IKeep3rV2Job.setKeep3r.selector, true);
-        setRoleCapability(0, IAloeVolatilityOracleAdapter.setTokenFeeTierRefreshList.selector, true);
+        setRoleCapability(0, IValoremVolatilityOracleAdapter.setTokenFeeTierRefreshList.selector, true);
 
         uniswapV3Factory = IUniswapV3Factory(v3Factory);
-        aloeVolatilityOracle = IVolatilityOracle(aloeOracle);
+        volatilityOracle = IVolatilityOracle(_volatilityOracle);
         keep3r = _keep3r;
     }
 
@@ -61,8 +61,8 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     {
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
-        uint256[25] memory lens = aloeVolatilityOracle.lens(pool);
-        (, uint8 idx) = aloeVolatilityOracle.feeGrowthGlobalsIndices(pool);
+        uint256[25] memory lens = volatilityOracle.lens(pool);
+        (, uint8 idx) = volatilityOracle.feeGrowthGlobalsIndices(pool);
         return lens[idx];
     }
 
@@ -71,7 +71,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         return 18;
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
         public
         view
@@ -80,12 +80,12 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         pool = IUniswapV3Pool(uniswapV3Factory.getPool(tokenA, tokenB, fee));
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function refreshVolatilityCache() public returns (uint256) {
         return _refreshVolatilityCache();
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info) public returns (uint256) {
         _refreshPoolMetadata(info);
         (, uint256 timestamp) = _refreshTokenVolatility(info.tokenA, info.tokenB, info.feeTier);
@@ -104,7 +104,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      * ////////////// TOKEN REFRESH LIST ///////////////
      */
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
         returns (UniswapV3PoolInfo[] memory)
@@ -120,7 +120,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         return list;
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function getTokenFeeTierRefreshList() public view returns (UniswapV3PoolInfo[] memory) {
         return tokenFeeTierList;
     }
@@ -129,21 +129,21 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
-    function setAloeOracle(address oracle) external requiresAuth returns (address) {
-        aloeVolatilityOracle = IVolatilityOracle(oracle);
-        emit AloeOracleSet(oracle);
+    /// @inheritdoc IValoremVolatilityOracleAdapter
+    function setVolatilityOracle(address oracle) external requiresAuth returns (address) {
+        volatilityOracle = IVolatilityOracle(oracle);
+        emit VolatilityOracleSet(oracle);
         return oracle;
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function setV3Factory(address factory) external requiresAuth returns (address) {
         uniswapV3Factory = IUniswapV3Factory(factory);
         emit UniswapV3FactorySet(factory);
         return factory;
     }
 
-    /// @inheritdoc IAloeVolatilityOracleAdapter
+    /// @inheritdoc IValoremVolatilityOracleAdapter
     function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) public pure returns (uint24) {
         if (tier == UniswapV3FeeTier.PCT_POINT_01) {
             return 1 * 100;
@@ -170,7 +170,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
             _refreshTokenVolatility(tokenA, tokenB, feeTier);
         }
 
-        emit AloeVolatilityOracleCacheUpdated(block.timestamp);
+        emit VolatilityOracleCacheUpdated(block.timestamp);
         return block.timestamp;
     }
 
@@ -186,8 +186,8 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         // the oldest observation for the pool oracle is under an hour. for now,
         // we're only refreshing the pool metadata cache when the token is added to the
         // refresh list, and when a manual call to refresh a token is made.
-        // aloeVolatilityOracle.cacheMetadataFor(pool);
-        uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
+        // volatilityOracle.cacheMetadataFor(pool);
+        uint256 impliedVolatility = volatilityOracle.estimate24H(pool);
         emit TokenVolatilityUpdated(tokenA, tokenB, fee, impliedVolatility, block.timestamp);
         return (impliedVolatility, block.timestamp);
     }
@@ -195,6 +195,6 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     function _refreshPoolMetadata(UniswapV3PoolInfo memory info) internal {
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(info.feeTier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(info.tokenA, info.tokenB, fee);
-        aloeVolatilityOracle.cacheMetadataFor(pool);
+        volatilityOracle.cacheMetadataFor(pool);
     }
 }
