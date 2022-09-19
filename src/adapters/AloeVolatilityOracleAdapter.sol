@@ -84,6 +84,13 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         return _refreshVolatilityCache();
     }
 
+    /// @inheritdoc IAloeVolatilityOracleAdapter
+    function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info) public returns (uint256) {
+        _refreshPoolMetadata(info);
+        (, uint256 timestamp) = _refreshTokenVolatility(info.tokenA, info.tokenB, info.feeTier);
+        return timestamp;
+    }
+
     /**
      * ////////////// KEEP3R ///////////////
      */
@@ -103,7 +110,10 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     {
         delete tokenFeeTierList;
         for (uint256 i = 0; i < list.length; i++) {
-            tokenFeeTierList.push(UniswapV3PoolInfo(list[i].tokenA, list[i].tokenB, list[i].feeTier));
+            UniswapV3PoolInfo memory info = UniswapV3PoolInfo(list[i].tokenA, list[i].tokenB, list[i].feeTier);
+            // refresh pool metadata cache on first add 
+            _refreshPoolMetadata(info);
+            tokenFeeTierList.push(info);
         }
         emit TokenRefreshListSet();
         return list;
@@ -169,9 +179,21 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     {
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(feeTier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
-        aloeVolatilityOracle.cacheMetadataFor(pool);
+        
+        // refresh metadata only if observation is older than xx
+        // in certain cases, aloe won't have sufficient data to run estimate24h, since
+        // the oldest observation for the pool oracle is under an hour. for now, 
+        // we're only refreshing the pool metadata cache when the token is added to the 
+        // refresh list, and when a manual call to refresh a token is made.
+        // aloeVolatilityOracle.cacheMetadataFor(pool);
         uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
         emit TokenVolatilityUpdated(tokenA, tokenB, fee, impliedVolatility, block.timestamp);
         return (impliedVolatility, block.timestamp);
+    }
+
+    function _refreshPoolMetadata(UniswapV3PoolInfo memory info) internal {
+        uint24 fee = getUniswapV3FeeInHundredthsOfBip(info.feeTier);
+        IUniswapV3Pool pool = getV3PoolForTokensAndFee(info.tokenA, info.tokenB, fee);
+        aloeVolatilityOracle.cacheMetadataFor(pool);
     }
 }
