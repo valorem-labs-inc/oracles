@@ -2,6 +2,7 @@ ds-test/=lib/ds-test/src/
 forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/src/
 v3-core/=lib/v3-core/
+v3-periphery/=lib/v3-periphery/
 valorem-core/=lib/valorem-core/src
 chainlink/=lib/chainlink
 keep3r/=lib/keep3r-network-v2
