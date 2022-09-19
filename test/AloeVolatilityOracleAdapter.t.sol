@@ -164,16 +164,16 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
 
     function _cache1d() internal {
         // get 24 hours
+        aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        aloeAdapter.refreshVolatilityCache();
         for (uint256 i = 0; i < 24; i++) {
-            aloeAdapter.refreshVolatilityCache();
             emit LogUint("cached hour", i);
             // fuzz trades
             _simulateUniswapMovements();
             // refresh the pool metadata
-            vm.warp(block.timestamp + 2 hours + 1);
-            aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+            vm.warp(block.timestamp + 1 hours + 1);
+            //aloeAdapter.refreshVolatilityCache();
         }
-        aloeAdapter.refreshVolatilityCache();
     }
 
     function _simulateUniswapMovements() internal {
@@ -186,12 +186,12 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             uint24 fee = aloeAdapter.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
             IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokensAndFee(poolInfo.tokenA, poolInfo.tokenB, fee);
             bool zeroForOne = pool.token0() == DAI_ADDRESS;
-            // swap 10 tokens on each pool
+            // swap 1 tokens on each pool
             pool.swap(
                 address(this),
                 zeroForOne,
-                10 ether,
-                zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
+                1 ether,
+                zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
         }
