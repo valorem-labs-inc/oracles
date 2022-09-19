@@ -25,7 +25,6 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     event LogInt(string topic, int256 info);
 
     VolatilityOracle public volatilityOracle;
-    address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
     address private constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
 
     address private constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
@@ -53,7 +52,6 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         volatilityOracle = new VolatilityOracle();
 
         adapter = new ValoremVolatilityOracleAdapter(
-            UNISWAP_FACTORY_ADDRESS, 
             address(volatilityOracle),
             KEEP3R_ADDRESS);
 
@@ -82,7 +80,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         );
     }
 
-    function testSetUniswapV3Pool() public {
+    function testGetUniswapV3Pool() public {
         IUniswapV3Pool pool = adapter.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_ONE_PCT_FEE);
         // USDC / DAI @ .01 pct
         assertEq(address(pool), 0x5777d92f208679DB4b9778590Fa3CAB3aC9e2168);

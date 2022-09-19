@@ -128,14 +128,6 @@ interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
      */
 
     /**
-     * @notice Sets the uniswap v3 factory contract address.
-     * @dev Used to get addresses of uniswap v3 pools for specific tokens.
-     * @param factory The address of the uniswap v3 factory contract.
-     * @return The address of the uniswap v3 factory contract.
-     */
-    function setV3Factory(address factory) external returns (address);
-
-    /**
      * @notice Sets the voltaility oracle contract address.
      * @param oracle The contract address for the volatility oracle.
      * @return The contract address for the volatility oracle.

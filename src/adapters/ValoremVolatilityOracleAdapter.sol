@@ -19,9 +19,12 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
     /**
      * /////////// CONSTANTS ////////////
      */
-    uint24 private constant POINT_ZERO_ONE_PCT_FEE = 1 * 100;
-    uint24 private constant POINT_THREE_PCT_FEE = 3 * 100 * 10;
-    uint24 private constant POINT_ZERO_FIVE_PCT_FEE = 5 * 100;
+    uint24 private constant POINT_ZERO_ONE_PCT_FEE = 100;
+    uint24 private constant POINT_THREE_PCT_FEE = 3_000;
+    uint24 private constant POINT_ZERO_FIVE_PCT_FEE = 500;
+
+    address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
+
 
     /**
      * /////////// STATE ////////////
@@ -32,14 +35,14 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
     IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
     // MultiRolesAuthority inehrited from Keep3rV2Job
-    constructor(address v3Factory, address _volatilityOracle, address _keep3r)
+    constructor(address _volatilityOracle, address _keep3r)
         MultiRolesAuthority(msg.sender, Authority(address(0)))
     {
         setRoleCapability(0, IValoremVolatilityOracleAdapter.setVolatilityOracle.selector, true);
         setRoleCapability(0, IKeep3rV2Job.setKeep3r.selector, true);
         setRoleCapability(0, IValoremVolatilityOracleAdapter.setTokenFeeTierRefreshList.selector, true);
 
-        uniswapV3Factory = IUniswapV3Factory(v3Factory);
+        uniswapV3Factory = IUniswapV3Factory(UNISWAP_FACTORY_ADDRESS);
         volatilityOracle = IVolatilityOracle(_volatilityOracle);
         keep3r = _keep3r;
     }
@@ -134,13 +137,6 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
         volatilityOracle = IVolatilityOracle(oracle);
         emit VolatilityOracleSet(oracle);
         return oracle;
-    }
-
-    /// @inheritdoc IValoremVolatilityOracleAdapter
-    function setV3Factory(address factory) external requiresAuth returns (address) {
-        uniswapV3Factory = IUniswapV3Factory(factory);
-        emit UniswapV3FactorySet(factory);
-        return factory;
     }
 
     /// @inheritdoc IValoremVolatilityOracleAdapter
