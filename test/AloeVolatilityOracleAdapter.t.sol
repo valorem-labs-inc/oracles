@@ -16,13 +16,13 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
+contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     using stdStorage for StdStorage;
 
     event LogString(string topic);
     event LogAddress(string topic, address info);
-    event LogUint(string topic, uint info);
-    event LogInt(string topic, int info);
+    event LogUint(string topic, uint256 info);
+    event LogInt(string topic, int256 info);
 
     VolatilityOracle public volatilityOracle;
     address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
@@ -44,7 +44,6 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
     uint160 internal constant MIN_SQRT_RATIO = 4295128739;
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
-
 
     AloeVolatilityOracleAdapter public aloeAdapter;
 
@@ -123,16 +122,11 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
         }
     }
 
-    /** 
+    /**
      * /////////// IUniswapV3SwapCallback /////////////
      */
 
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) public 
-    {
+    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) public {
         emit LogInt("uniswap swap callback, amount0", amount0Delta);
         emit LogInt("uniswap swap callback, amount1", amount1Delta);
         // only ever transferring DAI to the pool, extend this via data
@@ -170,7 +164,7 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
 
     function _cache1d() internal {
         // get 24 hours
-        for (uint i = 0; i < 24; i++) {
+        for (uint256 i = 0; i < 24; i++) {
             aloeAdapter.refreshVolatilityCache();
             emit LogUint("cached hour", i);
             // fuzz trades
@@ -187,34 +181,30 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
         _writeTokenBalance(address(this), address(DAI_ADDRESS), 1_000_000_000 ether);
 
         // iterate pools
-        for (uint i = 0; i < defaultTokenRefreshList.length; i++) {
+        for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo memory poolInfo = defaultTokenRefreshList[i];
             uint24 fee = aloeAdapter.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
-            IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokensAndFee(
-                poolInfo.tokenA, poolInfo.tokenB, fee);
-            bool zeroForOne = pool.token0() == DAI_ADDRESS; 
+            IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokensAndFee(poolInfo.tokenA, poolInfo.tokenB, fee);
+            bool zeroForOne = pool.token0() == DAI_ADDRESS;
             // swap 10 tokens on each pool
             pool.swap(
                 address(this),
                 zeroForOne,
                 10 ether,
                 zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
-                abi.encodePacked(address(pool)));
+                abi.encodePacked(address(pool))
+            );
         }
     }
 
     function _writeTokenBalance(address who, address token, uint256 amt) internal {
-        stdstore
-            .target(token)
-            .sig(IERC20(token).balanceOf.selector)
-            .with_key(who)
-            .checked_write(amt);
+        stdstore.target(token).sig(IERC20(token).balanceOf.selector).with_key(who).checked_write(amt);
     }
 
     function _bytesToAddress(bytes memory bys) internal pure returns (address addr) {
         assembly {
             addr := mload(add(bys, 0x14))
-        } 
+        }
     }
     // TODO: Keep3r tests
 }

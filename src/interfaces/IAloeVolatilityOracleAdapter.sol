@@ -93,12 +93,14 @@ interface IAloeVolatilityOracleAdapter is IVolatilityOracleAdapter {
      * @return timestamp The timestamp of the cache refresh.
      */
     function refreshVolatilityCache() external returns (uint256 timestamp);
-    
+
     /**
      * @notice Updates the cached implied volatility for the supplied pool info.
      * @return timestamp The timestamp of the cache refresh.
      */
-    function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info) external returns (uint256 timestamp);
+    function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
+        external
+        returns (uint256 timestamp);
 
     /**
      * ////////// TOKEN REFRESH LIST //////////

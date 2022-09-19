@@ -111,7 +111,7 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
         delete tokenFeeTierList;
         for (uint256 i = 0; i < list.length; i++) {
             UniswapV3PoolInfo memory info = UniswapV3PoolInfo(list[i].tokenA, list[i].tokenB, list[i].feeTier);
-            // refresh pool metadata cache on first add 
+            // refresh pool metadata cache on first add
             _refreshPoolMetadata(info);
             tokenFeeTierList.push(info);
         }
@@ -179,11 +179,11 @@ contract AloeVolatilityOracleAdapter is IAloeVolatilityOracleAdapter, Keep3rV2Jo
     {
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(feeTier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
-        
+
         // refresh metadata only if observation is older than xx
         // in certain cases, aloe won't have sufficient data to run estimate24h, since
-        // the oldest observation for the pool oracle is under an hour. for now, 
-        // we're only refreshing the pool metadata cache when the token is added to the 
+        // the oldest observation for the pool oracle is under an hour. for now,
+        // we're only refreshing the pool metadata cache when the token is added to the
         // refresh list, and when a manual call to refresh a token is made.
         // aloeVolatilityOracle.cacheMetadataFor(pool);
         uint256 impliedVolatility = aloeVolatilityOracle.estimate24H(pool);
