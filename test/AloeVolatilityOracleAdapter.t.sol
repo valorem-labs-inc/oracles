@@ -22,6 +22,7 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
     event LogString(string topic);
     event LogAddress(string topic, address info);
     event LogUint(string topic, uint info);
+    event LogInt(string topic, int info);
 
     VolatilityOracle public volatilityOracle;
     address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
@@ -29,7 +30,8 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
 
     address private constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address private constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address private constant MATIC_ADDRESS = 0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0;
+    address private constant FUN_ADDRESS = 0x419D0d8BdD9aF5e606Ae2232ed285Aff190E711b;
+    address private constant LUSD_ADDRESS = 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0;
     address private constant LINK_ADDRESS = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
     address private constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address private constant SNX_ADDRESS = 0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F;
@@ -66,17 +68,17 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
         );
         defaultTokenRefreshList.push(
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-                MATIC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
-            )
-        );
-        defaultTokenRefreshList.push(
-            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
-                LINK_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
                 WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+            )
+        );
+        defaultTokenRefreshList.push(
+            IAloeVolatilityOracleAdapter.UniswapV3PoolInfo(
+                LUSD_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
             )
         );
     }
@@ -98,24 +100,20 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
         IAloeVolatilityOracleAdapter.UniswapV3PoolInfo[] memory returnedRefreshList =
             aloeAdapter.getTokenFeeTierRefreshList();
         assertEq(defaultTokenRefreshList, returnedRefreshList);
-
-        defaultTokenRefreshList[3].tokenA = SNX_ADDRESS;
-
-        aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
-
-        returnedRefreshList = aloeAdapter.getTokenFeeTierRefreshList();
-        assertFalse(returnedRefreshList[3].tokenA == WETH_ADDRESS);
-        assertEq(defaultTokenRefreshList, returnedRefreshList);
     }
 
     function testTokenVolatilityRefresh() public {
         // TODO: Add error if v3 pool not set
+        // move forward 1 hour to allow for aloe data requirement
+        vm.warp(block.timestamp + 1 hours + 1);
         aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         uint256 ts = aloeAdapter.refreshVolatilityCache();
         assertEq(ts, block.timestamp);
     }
 
     function testGetImpliedVolatility() public {
+        // move forward 1 hour to allow for aloe data requirement
+        vm.warp(block.timestamp + 1 hours + 1);
         aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         _cache1d();
         emit LogString("cached one day");
@@ -135,10 +133,11 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
         bytes calldata data
     ) public 
     {
-        // only ever transferring DAI to the pool
-        int256 amountToTransfer = amount0Delta + amount0Delta;
-
-        emit LogUint("uniswap swap callback, transfer DAI", uint256(amountToTransfer));
+        emit LogInt("uniswap swap callback, amount0", amount0Delta);
+        emit LogInt("uniswap swap callback, amount1", amount1Delta);
+        // only ever transferring DAI to the pool, extend this via data
+        int256 amountToTransfer = amount0Delta > 0 ? amount0Delta : amount1Delta;
+        emit LogUint("uniswap swap callback, amountToTransfer", uint256(amountToTransfer));
         address poolAddr = _bytesToAddress(data);
         IERC20(DAI_ADDRESS).transfer(poolAddr, uint256(amountToTransfer));
     }
@@ -170,18 +169,15 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
     }
 
     function _cache1d() internal {
-        uint avgBlockTime = 13; // seconds
-        uint startingBlock = 15441384;
-        uint blocksPerHour = 1 hours / avgBlockTime;
-
-        // get 24 forks for 24 hours
+        // get 24 hours
         for (uint i = 0; i < 24; i++) {
             aloeAdapter.refreshVolatilityCache();
-            vm.roll(block.number + blocksPerHour);
-            vm.warp(block.timestamp + 1 hours + 1);
-
+            emit LogUint("cached hour", i);
             // fuzz trades
             _simulateUniswapMovements();
+            // refresh the pool metadata
+            vm.warp(block.timestamp + 2 hours + 1);
+            aloeAdapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         }
         aloeAdapter.refreshVolatilityCache();
     }
@@ -197,11 +193,11 @@ contract AloeVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback{
             IUniswapV3Pool pool = aloeAdapter.getV3PoolForTokensAndFee(
                 poolInfo.tokenA, poolInfo.tokenB, fee);
             bool zeroForOne = pool.token0() == DAI_ADDRESS; 
-            // swap 1K tokens on each pool
+            // swap 10 tokens on each pool
             pool.swap(
                 address(this),
                 zeroForOne,
-                1_000 ether,
+                10 ether,
                 zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool)));
         }
