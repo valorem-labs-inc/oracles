@@ -34,18 +34,14 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
 
     IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
-    // MultiRolesAuthority inehrited from Keep3rV2Job
-    constructor(address _volatilityOracle, address _keep3r)
-        MultiRolesAuthority(msg.sender, Authority(address(0)))
-    {
-        setRoleCapability(0, IValoremVolatilityOracleAdapter.setVolatilityOracle.selector, true);
-        setRoleCapability(0, IKeep3rV2Job.setKeep3r.selector, true);
-        setRoleCapability(0, IValoremVolatilityOracleAdapter.setTokenFeeTierRefreshList.selector, true);
 
+    constructor(address _volatilityOracle, address _keep3r)
+    {
+        admin = msg.sender;
         uniswapV3Factory = IUniswapV3Factory(UNISWAP_FACTORY_ADDRESS);
         volatilityOracle = IVolatilityOracle(_volatilityOracle);
         keep3r = _keep3r;
-    }
+    } 
 
     /**
      * /////////// IVolatilityOracleAdapter //////////
@@ -110,6 +106,7 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
     /// @inheritdoc IValoremVolatilityOracleAdapter
     function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
+        requiresAdmin(msg.sender)
         returns (UniswapV3PoolInfo[] memory)
     {
         delete tokenFeeTierList;
@@ -133,10 +130,16 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
      */
 
     /// @inheritdoc IValoremVolatilityOracleAdapter
-    function setVolatilityOracle(address oracle) external requiresAuth returns (address) {
+    function setVolatilityOracle(address oracle) external requiresAdmin(msg.sender) returns (address) {
         volatilityOracle = IVolatilityOracle(oracle);
         emit VolatilityOracleSet(oracle);
         return oracle;
+    }
+
+    function setAdmin(address _admin) external requiresAdmin(msg.sender) {
+        require(_admin != address(0x0), "INVALID ADMIN");
+        admin = _admin;
+        emit AdminSet(_admin);
     }
 
     /// @inheritdoc IValoremVolatilityOracleAdapter

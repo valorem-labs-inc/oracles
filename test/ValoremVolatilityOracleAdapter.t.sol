@@ -80,6 +80,15 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         );
     }
 
+    function testAdmin() public {
+        adapter.setVolatilityOracle(address(0));
+
+        // some random addr
+        vm.prank(DAI_ADDRESS);
+        vm.expectRevert(bytes("!ADMIN"));
+        adapter.setVolatilityOracle(address(this));
+    }
+
     function testGetUniswapV3Pool() public {
         IUniswapV3Pool pool = adapter.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_ONE_PCT_FEE);
         // USDC / DAI @ .01 pct
