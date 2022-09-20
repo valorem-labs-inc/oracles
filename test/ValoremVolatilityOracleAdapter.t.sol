@@ -193,14 +193,28 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             uint24 fee = adapter.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
             IUniswapV3Pool pool = adapter.getV3PoolForTokensAndFee(poolInfo.tokenA, poolInfo.tokenB, fee);
             bool zeroForOne = pool.token0() == DAI_ADDRESS;
-            // swap 1 tokens on each pool
-            pool.swap(
+            // swap tokens on each pool
+            (int256 amount0, int256 amount1) = pool.swap(
                 address(this),
                 zeroForOne,
-                1 ether,
+                1_000 ether,
                 zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
+
+            vm.warp(block.timestamp + 1 hours + 1);
+
+            // swap it back
+            pool.swap(
+                address(this),
+                !zeroForOne,
+                zeroForOne ? -amount1 : -amount0,
+                !zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
+                abi.encodePacked(address(pool))
+            );
+
+            // go back in time
+            vm.warp(block.timestamp - 1 hours - 1);
         }
     }
 
