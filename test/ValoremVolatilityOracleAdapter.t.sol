@@ -132,7 +132,6 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     /**
      * /////////// IUniswapV3SwapCallback /////////////
      */
-
     function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata data) public {
         emit LogInt("uniswap swap callback, amount0", amount0Delta);
         emit LogInt("uniswap swap callback, amount1", amount1Delta);
@@ -140,7 +139,9 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         int256 amountToTransfer = amount0Delta > 0 ? amount0Delta : amount1Delta;
         emit LogUint("uniswap swap callback, amountToTransfer", uint256(amountToTransfer));
         address poolAddr = _bytesToAddress(data);
-        IERC20(DAI_ADDRESS).transfer(poolAddr, uint256(amountToTransfer));
+        IUniswapV3Pool pool = IUniswapV3Pool(poolAddr);
+        address erc20 = amount0Delta > 0 ? pool.token0() : pool.token1();
+        IERC20(erc20).transfer(poolAddr, uint256(amountToTransfer));
     }
 
     /**
@@ -179,8 +180,8 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             _simulateUniswapMovements();
             // refresh the pool metadata
             vm.warp(block.timestamp + 1 hours + 1);
-            //adapter.refreshVolatilityCache();
         }
+        adapter.refreshVolatilityCache();
     }
 
     function _simulateUniswapMovements() internal {
@@ -197,7 +198,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             (int256 amount0, int256 amount1) = pool.swap(
                 address(this),
                 zeroForOne,
-                1_000 ether,
+                1_000_000 ether,
                 zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
@@ -212,9 +213,8 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
                 !zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
-
             // go back in time
-            vm.warp(block.timestamp - 1 hours - 1);
+            vm.warp(block.timestamp - 1 hours);
         }
     }
 
