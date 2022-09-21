@@ -25,16 +25,10 @@ interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
      */
 
     /**
-     * @notice Emitted when the uniswap v3 factory contract address is set.
-     * @param v3Factory The address of the uniswap v3 factory contract.
-     */
-    event UniswapV3FactorySet(address v3Factory);
-
-    /**
      * @notice Emitted when the volatility oracle contract address is set.
      * @param oracle The contract address for the oracle.
      */
-    event VolatilityOracleSet(address oracle);
+    event VolatilityOracleSet(address indexed oracle);
 
     /**
      * @notice Emitted when the implied volatility cache is updated.
@@ -50,13 +44,15 @@ interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
      * @param volatility The implied volatility of the token.
      * @param timestamp The timestamp of the refresh.
      */
-    event TokenVolatilityUpdated(address tokenA, address tokenB, uint24 feeTier, uint256 volatility, uint256 timestamp);
+    event TokenVolatilityUpdated(
+        address indexed tokenA, address indexed tokenB, uint24 feeTier, uint256 volatility, uint256 timestamp
+    );
 
     /**
      * @notice Emitted when a new admin address is set for the contract.
      * @param admin The new admin address.
      */
-    event AdminSet(address admin);
+    event AdminSet(address indexed admin);
 
     /// @notice Emitted when the token refresh list is set.
     event TokenRefreshListSet();
