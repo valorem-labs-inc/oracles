@@ -155,93 +155,93 @@ library TickMath {
             r = ratio << (127 - msb);
         }
 
-        int256 log2 = (int256(msb) - 128) << 64;
+        int256 lg2 = (int256(msb) - 128) << 64;
 
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(63, f))
+            lg2 := or(lg2, shl(63, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(62, f))
+            lg2 := or(lg2, shl(62, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(61, f))
+            lg2 := or(lg2, shl(61, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(60, f))
+            lg2 := or(lg2, shl(60, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(59, f))
+            lg2 := or(lg2, shl(59, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(58, f))
+            lg2 := or(lg2, shl(58, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(57, f))
+            lg2 := or(lg2, shl(57, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(56, f))
+            lg2 := or(lg2, shl(56, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(55, f))
+            lg2 := or(lg2, shl(55, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(54, f))
+            lg2 := or(lg2, shl(54, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(53, f))
+            lg2 := or(lg2, shl(53, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(52, f))
+            lg2 := or(lg2, shl(52, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(51, f))
+            lg2 := or(lg2, shl(51, f))
             r := shr(f, r)
         }
         assembly {
             r := shr(127, mul(r, r))
             let f := shr(128, r)
-            log2 := or(log2, shl(50, f))
+            lg2 := or(lg2, shl(50, f))
         }
 
-        int256 logSqrt10001 = log2 * 255738958999603826347141; // 128.128 number
+        int256 logSqrt10001 = lg2 * 255738958999603826347141; // 128.128 number
 
         int24 tickLow = int24((logSqrt10001 - 3402992956809132418596140100660247210) >> 128);
         int24 tickHi = int24((logSqrt10001 + 291339464771989622907027621153398088495) >> 128);
