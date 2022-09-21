@@ -26,6 +26,15 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     event LogInt(string topic, int256 info);
     event LogPoolObs(string msg, address pool, uint16 obsInd, uint16 obsCard);
 
+    // IValoremVolatilityOracleAdapter events
+    event VolatilityOracleSet(address indexed oracle);
+    event VolatilityOracleCacheUpdated(uint256 timestamp);
+    event TokenVolatilityUpdated(
+        address indexed tokenA, address indexed tokenB, uint24 feeTier, uint256 volatility, uint256 timestamp
+    );
+    event AdminSet(address indexed admin);
+    event TokenRefreshListSet();
+
     VolatilityOracle public volatilityOracle;
     address private constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
 
@@ -81,7 +90,13 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         adapter.setVolatilityOracle(address(0));
 
         // some random addr
-        vm.prank(DAI_ADDRESS);
+        vm.prank(address(1));
+        vm.expectRevert(bytes("!ADMIN"));
+        adapter.setVolatilityOracle(address(this));
+
+        vm.expectEmit(true, false, false, false);
+        emit AdminSet(address(1));
+        adapter.setAdmin(address(1));
         vm.expectRevert(bytes("!ADMIN"));
         adapter.setVolatilityOracle(address(this));
     }
@@ -97,7 +112,8 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     }
 
     function testSetRefreshTokenList() public {
-        // TODO: assert event emission
+        vm.expectEmit(false, false, false, false);
+        emit TokenRefreshListSet();
         adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
 
         IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory returnedRefreshList =
@@ -106,10 +122,20 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     }
 
     function testTokenVolatilityRefresh() public {
-        // TODO: Add error if v3 pool not set
         // move forward 1 hour to allow for aloe data requirement
         vm.warp(block.timestamp + 1 hours + 1);
         adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+
+        for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
+            address tokenA = defaultTokenRefreshList[i].tokenA;
+            address tokenB = defaultTokenRefreshList[i].tokenB;
+            IValoremVolatilityOracleAdapter.UniswapV3FeeTier feeTier = defaultTokenRefreshList[i].feeTier;
+            uint24 fee = adapter.getUniswapV3FeeInHundredthsOfBip(feeTier);
+            vm.expectEmit(true, true, false, false);
+            emit TokenVolatilityUpdated(tokenA, tokenB, fee, 0, 0);
+        }
+        vm.expectEmit(false, false, false, true);
+        emit VolatilityOracleCacheUpdated(block.timestamp);
         uint256 ts = adapter.refreshVolatilityCache();
         assertEq(ts, block.timestamp);
     }
@@ -132,16 +158,8 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
 
         vm.warp(block.timestamp + 1 hours + 1);
         adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
-        vm.mockCall(
-            KEEP3R_ADDRESS,
-            abi.encodeWithSelector(IKeep3rJobWorkable.isKeeper.selector),
-            abi.encode(true)
-        );
-        vm.mockCall(
-            KEEP3R_ADDRESS,
-            abi.encodeWithSelector(IKeep3rJobWorkable.worked.selector),
-            abi.encode("")
-        );
+        vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.isKeeper.selector), abi.encode(true));
+        vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.worked.selector), abi.encode(""));
         adapter.work();
     }
 
