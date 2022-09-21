@@ -23,6 +23,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     event LogAddress(string topic, address info);
     event LogUint(string topic, uint256 info);
     event LogInt(string topic, int256 info);
+    event LogPoolObs(string msg, address pool, uint16 obsInd, uint16 obsCard);
 
     VolatilityOracle public volatilityOracle;
     address private constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
@@ -75,7 +76,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         );
         defaultTokenRefreshList.push(
             IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                LUSD_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+                LUSD_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_05
             )
         );
     }
@@ -178,10 +179,13 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             emit LogUint("cached hour", i);
             // fuzz trades
             _simulateUniswapMovements();
+            adapter.refreshVolatilityCache();
             // refresh the pool metadata
             vm.warp(block.timestamp + 1 hours + 1);
         }
-        adapter.refreshVolatilityCache();
+
+        vm.warp(block.timestamp + 3 hours);
+        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
     }
 
     function _simulateUniswapMovements() internal {
@@ -215,6 +219,8 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             );
             // go back in time
             vm.warp(block.timestamp - 1 hours);
+            (,, uint16 obsInd, uint16 obsCard, uint16 obsCardN,,) = pool.slot0();
+            emit LogPoolObs("number of observations in pool", address(pool), obsInd, obsCard);
         }
     }
 
