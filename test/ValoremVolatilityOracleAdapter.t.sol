@@ -253,7 +253,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
 
             // go back in time
             vm.warp(block.timestamp - 1 hours);
-            (,, uint16 obsInd, uint16 obsCard, uint16 obsCardN,,) = pool.slot0();
+            (,, uint16 obsInd, uint16 obsCard,,,) = pool.slot0();
             emit LogPoolObs("number of observations in pool", address(pool), obsInd, obsCard);
         }
     }

@@ -153,6 +153,7 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
         if (tier == UniswapV3FeeTier.PCT_1) {
             return 100 * 100;
         }
+        revert("unimplemented fee tier");
     }
 
     /**
