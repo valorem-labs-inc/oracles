@@ -74,11 +74,6 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
                 WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
             )
         );
-        defaultTokenRefreshList.push(
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                LUSD_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_05
-            )
-        );
     }
 
     function testAdmin() public {
@@ -168,7 +163,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         address tokenB = poolInfo.tokenB;
         IVolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
         uint256 iv = adapter.getImpliedVolatility(tokenA, tokenB, feeTier);
-        // assertFalse(iv == 0, "Volatility is expected to have been refreshed");
+        assertFalse(iv == 0, "Volatility is expected to have been refreshed");
     }
 
     function _cache1d() internal {
@@ -217,6 +212,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
                 !zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
+
             // go back in time
             vm.warp(block.timestamp - 1 hours);
             (,, uint16 obsInd, uint16 obsCard, uint16 obsCardN,,) = pool.slot0();
