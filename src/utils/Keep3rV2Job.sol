@@ -16,8 +16,8 @@ abstract contract Keep3rV2Job is IKeep3rV2Job {
         IKeep3r(keep3r).worked(_keeper);
     }
 
-    modifier requiresAdmin (address sender) {
-        require (sender == admin, "!ADMIN");
+    modifier requiresAdmin(address sender) {
+        require(sender == admin, "!ADMIN");
         _;
     }
 

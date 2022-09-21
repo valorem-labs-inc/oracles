@@ -25,7 +25,6 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
 
     address private constant UNISWAP_FACTORY_ADDRESS = 0x1F98431c8aD98523631AE4a59f267346ea31F984;
 
-
     /**
      * /////////// STATE ////////////
      */
@@ -34,14 +33,12 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
 
     IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
-
-    constructor(address _volatilityOracle, address _keep3r)
-    {
+    constructor(address _volatilityOracle, address _keep3r) {
         admin = msg.sender;
         uniswapV3Factory = IUniswapV3Factory(UNISWAP_FACTORY_ADDRESS);
         volatilityOracle = IVolatilityOracle(_volatilityOracle);
         keep3r = _keep3r;
-    } 
+    }
 
     /**
      * /////////// IVolatilityOracleAdapter //////////

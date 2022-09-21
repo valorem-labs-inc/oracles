@@ -203,7 +203,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
                 address(this),
                 zeroForOne,
                 1_000_000 ether,
-                zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
+                zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
 
@@ -214,7 +214,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
                 address(this),
                 !zeroForOne,
                 zeroForOne ? -amount1 : -amount0,
-                !zeroForOne ?  MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
+                !zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1,
                 abi.encodePacked(address(pool))
             );
             // go back in time
