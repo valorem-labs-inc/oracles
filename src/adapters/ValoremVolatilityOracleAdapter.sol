@@ -58,7 +58,7 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
         uint256[25] memory lens = volatilityOracle.lens(pool);
-        (uint8 idx, ) = volatilityOracle.feeGrowthGlobalsIndices(pool);
+        (uint8 idx,) = volatilityOracle.feeGrowthGlobalsIndices(pool);
         return lens[idx];
     }
 
