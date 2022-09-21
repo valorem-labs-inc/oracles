@@ -67,24 +67,24 @@ contract VolatilityOracle is IVolatilityOracle {
     }
 
     /// @inheritdoc IVolatilityOracle
-    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory IV) {
+    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory impliedVolatility) {
         (uint160 sqrtPriceX96, int24 tick,,,,,) = pool.slot0();
         Volatility.FeeGrowthGlobals[25] memory feeGrowthGlobal = feeGrowthGlobals[pool];
 
         for (uint8 i = 0; i < 25; i++) {
-            (IV[i],) = _estimate24H(pool, sqrtPriceX96, tick, feeGrowthGlobal[i]);
+            (impliedVolatility[i],) = _estimate24H(pool, sqrtPriceX96, tick, feeGrowthGlobal[i]);
         }
     }
 
     /// @inheritdoc IVolatilityOracle
-    function estimate24H(IUniswapV3Pool pool) external returns (uint256 IV) {
+    function estimate24H(IUniswapV3Pool pool) external returns (uint256 impliedVolatility) {
         (uint160 sqrtPriceX96, int24 tick,,,,,) = pool.slot0();
 
         Volatility.FeeGrowthGlobals[25] storage feeGrowthGlobal = feeGrowthGlobals[pool];
         Indices memory idxs = _loadIndicesAndSelectRead(pool, feeGrowthGlobal);
 
         Volatility.FeeGrowthGlobals memory current;
-        (IV, current) = _estimate24H(pool, sqrtPriceX96, tick, feeGrowthGlobal[idxs.read]);
+        (impliedVolatility, current) = _estimate24H(pool, sqrtPriceX96, tick, feeGrowthGlobal[idxs.read]);
 
         // Write to storage
         if (current.timestamp - 1 hours > feeGrowthGlobal[idxs.write].timestamp) {
@@ -102,7 +102,7 @@ contract VolatilityOracle is IVolatilityOracle {
     )
         private
         view
-        returns (uint256 IV, Volatility.FeeGrowthGlobals memory current)
+        returns (uint256 impliedVolatility, Volatility.FeeGrowthGlobals memory current)
     {
         Volatility.PoolMetadata memory poolMetadata = cachedPoolMetadata[_pool];
 
@@ -116,7 +116,7 @@ contract VolatilityOracle is IVolatilityOracle {
 
         current =
             Volatility.FeeGrowthGlobals(_pool.feeGrowthGlobal0X128(), _pool.feeGrowthGlobal1X128(), uint32(block.timestamp));
-        IV = Volatility.estimate24H(
+        impliedVolatility = Volatility.estimate24H(
             poolMetadata,
             Volatility.PoolData(_sqrtPriceX96, _tick, arithmeticMeanTick, secondsPerLiquidityX128, secondsAgo, _pool.liquidity()),
             _previous,

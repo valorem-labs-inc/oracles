@@ -55,14 +55,14 @@ interface IVolatilityOracle {
      * @dev This is not meant to be used on-chain, and it doesn't contribute to the oracle's knowledge.
      * Please use `estimate24H` instead.
      * @param pool The pool to use for volatility estimate
-     * @return IV The array of volatility estimates, scaled by 1e18
+     * @return impliedVolatility The array of volatility estimates, scaled by 1e18
      */
-    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory IV);
+    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory impliedVolatility);
 
     /**
      * @notice Estimates 24-hour implied volatility for a Uniswap pool.
      * @param pool The pool to use for volatility estimate
-     * @return IV The estimated volatility, scaled by 1e18
+     * @return impliedVolatility The estimated volatility, scaled by 1e18
      */
-    function estimate24H(IUniswapV3Pool pool) external returns (uint256 IV);
+    function estimate24H(IUniswapV3Pool pool) external returns (uint256 impliedVolatility);
 }
