@@ -12,7 +12,7 @@ import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority {
     AggregatorV3Interface public chainlinkPriceOracle;
 
-    constructor(address priceOracleAddress) MultiRolesAuthority(msg.sender, Authority(address(0))) {
+    constructor(address priceOracleAddress) external MultiRolesAuthority(msg.sender, Authority(address(0))) {
         setRoleCapability(0, ChainlinkPriceOracleAdapter.setChainlinkOracle.selector, true);
         chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
     }
@@ -28,7 +28,8 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      */
     function getPriceUSD(address token) external view returns (uint256) {
         (, int256 price,,,) = chainlinkPriceOracle.latestRoundData();
-        return uint256(price);
+        // tmp to get rid of warning
+        return uint256(uint256(token));
     }
 
     /**
