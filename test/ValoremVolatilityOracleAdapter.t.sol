@@ -3,10 +3,11 @@ pragma solidity 0.8.13;
 
 import "forge-std/Test.sol";
 import "v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
+import "keep3r/solidity/interfaces/IKeep3r.sol";
 
 import "../src/libraries/aloe/VolatilityOracle.sol";
 import "../src/adapters/ValoremVolatilityOracleAdapter.sol";
-
+import "../src/interfaces/IKeep3rV2Job.sol";
 import "../src/interfaces/IVolatilityOracleAdapter.sol";
 
 /// for writeBalance
@@ -123,6 +124,25 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
             IValoremVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
             _validateCachedVolatilityForPool(poolInfo);
         }
+    }
+
+    function testKeep3r() public {
+        vm.expectRevert(IKeep3rV2Job.InvalidKeeper.selector);
+        adapter.work();
+
+        vm.warp(block.timestamp + 1 hours + 1);
+        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        vm.mockCall(
+            KEEP3R_ADDRESS,
+            abi.encodeWithSelector(IKeep3rJobWorkable.isKeeper.selector),
+            abi.encode(true)
+        );
+        vm.mockCall(
+            KEEP3R_ADDRESS,
+            abi.encodeWithSelector(IKeep3rJobWorkable.worked.selector),
+            abi.encode("")
+        );
+        adapter.work();
     }
 
     /**
