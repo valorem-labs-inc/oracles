@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "keep3r/solidity/interfaces/IKeep3r.sol";
 
-import "../src/libraries/aloe/VolatilityOracle.sol";
+import "../src/VolatilityOracle.sol";
 import "../src/adapters/ValoremVolatilityOracleAdapter.sol";
 import "../src/interfaces/IKeep3rV2Job.sol";
 import "../src/interfaces/IVolatilityOracleAdapter.sol";
@@ -184,9 +184,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     function assertEq(
         IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory a,
         IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory b
-    )
-        internal
-    {
+    ) internal {
         // from forg-std/src/Test.sol
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [UniswapV3PoolInfo[]]");

@@ -4,7 +4,6 @@ pragma solidity 0.8.13;
 import "../interfaces/IVolatilityOracleAdapter.sol";
 
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-import "../utils/Keep3rV2Job.sol";
 
 /**
  * @notice This contract adapts the Aloe capital volatility oracle
