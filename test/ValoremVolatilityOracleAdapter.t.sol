@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 import "v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "keep3r/solidity/interfaces/IKeep3r.sol";
 
-import "../src/VolatilityOracle.sol";
+import "../src/UniswapV3VolatilityOracle.sol";
 import "../src/adapters/ValoremVolatilityOracleAdapter.sol";
 import "../src/interfaces/IKeep3rV2Job.sol";
-import "../src/interfaces/IVolatilityOracleAdapter.sol";
+import "../src/interfaces/IVolatilityOracle.sol";
 
 /// for writeBalance
 interface IERC20 {
@@ -71,17 +71,17 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
             IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+                USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+                FUN_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+                WETH_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
             )
         );
     }
@@ -197,7 +197,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     {
         address tokenA = poolInfo.tokenA;
         address tokenB = poolInfo.tokenB;
-        IVolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
+        IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
         uint256 iv = adapter.getImpliedVolatility(tokenA, tokenB, feeTier);
         assertFalse(iv == 0, "Volatility is expected to have been refreshed");
     }

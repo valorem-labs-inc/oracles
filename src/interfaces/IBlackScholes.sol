@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "./IVolatilityOracleAdapter.sol";
-import "./IPriceOracleAdapter.sol";
+import "./IVolatilityOracle.sol";
+import "./IPriceOracle.sol";
 import "./IYieldOracle.sol";
 
 import "valorem-core/interfaces/IOptionSettlementEngine.sol";

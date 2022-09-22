@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "../interfaces/IVolatilityOracleAdapter.sol";
+import "../interfaces/IVolatilityOracle.sol";
 
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "../utils/Keep3rV2Job.sol";
+import "./IOracleAdmin.sol";
 
 /**
  * @notice This contract adapts the Aloe capital volatility oracle
  * contract from https://github.com/aloelabs/aloe-blend.
  */
-interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
+interface IValoremVolatilityOracleAdapter is IUniswapV3VolatilityOracleAdapter, IOracleAdmin {
     /**
      * ////////// STRUCTS /////////////
      */
     struct UniswapV3PoolInfo {
         address tokenA;
         address tokenB;
-        IVolatilityOracleAdapter.UniswapV3FeeTier feeTier;
+        IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier feeTier;
     }
 
     /**
@@ -121,23 +123,4 @@ interface IValoremVolatilityOracleAdapter is IVolatilityOracleAdapter {
      * @return The token refresh list.
      */
     function getTokenFeeTierRefreshList() external view returns (UniswapV3PoolInfo[] memory);
-
-    /// function addTokenToRefreshList(address token) external returns (address);
-
-    /**
-     * /////////////// ADMIN FUNCTIONS ///////////////
-     */
-
-    /**
-     * @notice Sets the admin address for this contract.
-     * @param _admin The new admin address for this contract. Cannot be 0x0.
-     */
-    function setAdmin(address _admin) external;
-
-    /**
-     * @notice Sets the voltaility oracle contract address.
-     * @param oracle The contract address for the volatility oracle.
-     * @return The contract address for the volatility oracle.
-     */
-    function setVolatilityOracle(address oracle) external returns (address);
 }

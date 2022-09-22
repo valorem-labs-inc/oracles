@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "../interfaces/IPriceOracleAdapter.sol";
+import "../interfaces/IPriceOracle.sol";
 
 import "solmate/auth/authorities/MultiRolesAuthority.sol";
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "../interfaces/IOracleAdmin.sol";
 
 /**
  * @notice This contract adapts the chainlink price oracle
  */
-contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority {
+contract ChainlinkPriceOracleAdapter is IPriceOracle {
     AggregatorV3Interface public chainlinkPriceOracle;
 
-    constructor(address priceOracleAddress) MultiRolesAuthority(msg.sender, Authority(address(0))) {
-        setRoleCapability(0, ChainlinkPriceOracleAdapter.setChainlinkOracle.selector, true);
+    constructor(address priceOracleAddress) {
         chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
     }
 
@@ -38,15 +38,7 @@ contract ChainlinkPriceOracleAdapter is IPriceOracleAdapter, MultiRolesAuthority
      * @notice Returns the scaling factor for the price
      * @return scale The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint16) {
-        uint8 decimals = chainlinkPriceOracle.decimals();
-        return uint16(decimals);
-    }
-
-    /**
-     * /////////////// ADMIN FUNCTIONS /////////////////
-     */
-    function setChainlinkOracle(address priceOracleAddress) external requiresAuth {
-        chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
+    function scale() external view returns (uint8) {
+        return chainlinkPriceOracle.decimals();
     }
 }

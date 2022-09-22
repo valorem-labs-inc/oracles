@@ -3,8 +3,8 @@ pragma solidity 0.8.13;
 
 import "../interfaces/IValoremVolatilityOracleAdapter.sol";
 
-import "../interfaces/IVolatilityOracle.sol";
-import "../VolatilityOracle.sol";
+import "../interfaces/IUniswapV3VolatilityOracle.sol";
+import "../UniswapV3VolatilityOracle.sol";
 
 import "v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -15,7 +15,7 @@ import "../utils/Keep3rV2Job.sol";
  * @notice This contract adapts the Aloe capital volatility oracle
  * contract from https://github.com/aloelabs/aloe-blend.
  */
-contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep3rV2Job {
+contract UniswapV3VolatilityOracleAdapter is Keep3rV2Job {
     /**
      * /////////// CONSTANTS ////////////
      */
@@ -29,27 +29,27 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
      * /////////// STATE ////////////
      */
     IUniswapV3Factory private uniswapV3Factory;
-    IVolatilityOracle private volatilityOracle;
+    IUniswapV3VolatilityOracle private volatilityOracle;
 
     IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private tokenFeeTierList;
 
     constructor(address _volatilityOracle, address _keep3r) {
         admin = msg.sender;
         uniswapV3Factory = IUniswapV3Factory(UNISWAP_FACTORY_ADDRESS);
-        volatilityOracle = IVolatilityOracle(_volatilityOracle);
+        volatilityOracle = IUniswapV3VolatilityOracle(_volatilityOracle);
         keep3r = _keep3r;
     }
 
     /**
-     * /////////// IVolatilityOracleAdapter //////////
+     * /////////// IUniswapV3VolatilityOracleAdapter //////////
      */
 
-    /// @inheritdoc IVolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
     function getHistoricalVolatility(address) external pure returns (uint256) {
         revert("not implemented");
     }
 
-    /// @inheritdoc IVolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
     function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
         external
         view
@@ -62,7 +62,7 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
         return lens[idx];
     }
 
-    /// @inheritdoc IVolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
     function scale() external pure returns (uint16) {
         return 18;
     }
@@ -128,7 +128,7 @@ contract ValoremVolatilityOracleAdapter is IValoremVolatilityOracleAdapter, Keep
 
     /// @inheritdoc IValoremVolatilityOracleAdapter
     function setVolatilityOracle(address oracle) external requiresAdmin(msg.sender) returns (address) {
-        volatilityOracle = IVolatilityOracle(oracle);
+        volatilityOracle = IUniswapV3VolatilityOracle(oracle);
         emit VolatilityOracleSet(oracle);
         return oracle;
     }
