@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "../interfaces/IPriceOracle.sol";
+import "./interfaces/IPriceOracle.sol";
 
 import "solmate/auth/authorities/MultiRolesAuthority.sol";
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "../interfaces/IOracleAdmin.sol";
+import "./interfaces/IOracleAdmin.sol";
 
 /**
  * @notice This contract adapts the chainlink price oracle
  */
-contract ChainlinkPriceOracleAdapter is IPriceOracle {
+contract ChainlinkPriceOracle is IPriceOracle {
     AggregatorV3Interface public chainlinkPriceOracle;
 
     constructor(address priceOracleAddress) {

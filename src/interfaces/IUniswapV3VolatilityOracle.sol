@@ -3,9 +3,119 @@ pragma solidity ^0.8.13;
 
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "./IKeep3rV2Job.sol";
+import "./IOracleAdmin.sol";
+import "./IVolatilityOracle.sol";
 
-/// From https://github.com/aloelabs/aloe-blend
-interface IUniswapV3VolatilityOracle is IKeep3rV2Job {
+interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IVolatilityOracle {
+    enum UniswapV3FeeTier {
+        PCT_POINT_01,
+        PCT_POINT_05,
+        PCT_POINT_3,
+        PCT_1
+    }
+
+    /**
+     * ////////// STRUCTS /////////////
+     */
+    struct UniswapV3PoolInfo {
+        address tokenA;
+        address tokenB;
+        UniswapV3FeeTier feeTier;
+    }
+
+    /**
+     * /////////// EVENTS /////////////
+     */
+
+    /**
+     * @notice Emitted when the implied volatility cache is updated.
+     * @param timestamp The timestamp of when the cache is updated.
+     */
+    event VolatilityOracleCacheUpdated(uint256 timestamp);
+
+    /**
+     * @notice Emitted when the implied volatility for a given token is updated.
+     * @param tokenA The ERC20 contract address of the token.
+     * @param tokenB The ERC20 contract address of the token.
+     * @param feeTier The UniswapV3 fee tier.
+     * @param volatility The implied volatility of the token.
+     * @param timestamp The timestamp of the refresh.
+     */
+    event TokenVolatilityUpdated(
+        address indexed tokenA, address indexed tokenB, uint24 feeTier, uint256 volatility, uint256 timestamp
+    );
+
+    /// @notice Emitted when the token refresh list is set.
+    event TokenRefreshListSet();
+
+    /// @notice Thrown when the passed v3 factory address is invalid.
+    error InvalidUniswapV3Factory();
+
+    /// @notice Thrown when invalid parameters are passed to setUniswapV3Pool.
+    error InvalidUniswapV3Pool();
+
+    /// @notice Thrown when the passed volatility oracle address is invalid.
+    error InvalidVolatilityOracle();
+
+    /**
+     * ////////// HELPERS ///////////
+     */
+
+    /**
+     * @notice Retrieves the uniswap v3 pool for passed ERC20 address plus arguments
+     * from setUniswapV3Pool.
+     * @param tokenA The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param tokenB The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param fee The fee tier for the pool in 1/100ths of a bip.
+     * @return pool The uniswap v3 pool for the supplied token.
+     */
+    function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
+        external
+        view
+        returns (IUniswapV3Pool pool);
+
+    /**
+     * @notice Retrieves the uniswap fee in 1/100ths of a bip.
+     * @param tier The fee tier enum.
+     * @return The fee in 1/100ths of a bip.
+     */
+    function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) external pure returns (uint24);
+
+    /**
+     * @notice Updates the cached implied volatility for the tokens in the refresh list.
+     * @return timestamp The timestamp of the cache refresh.
+     */
+    function refreshVolatilityCache() external returns (uint256 timestamp);
+
+    /**
+     * @notice Updates the cached implied volatility for the supplied pool info.
+     * @return timestamp The timestamp of the cache refresh.
+     */
+    function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
+        external
+        returns (uint256 timestamp);
+
+    /**
+     * ////////// TOKEN REFRESH LIST //////////
+     */
+
+    /**
+     * @notice Sets the list of tokens and fees to periodically refresh for implied volatility.
+     * @param list The token refresh list.
+     * @return The token refresh list.
+     */
+    function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
+        external
+        returns (UniswapV3PoolInfo[] memory);
+
+    /**
+     * @notice Gets the list of tokens and fees to periodically refresh for implied volatility.
+     * @return The token refresh list.
+     */
+    function getTokenFeeTierRefreshList() external view returns (UniswapV3PoolInfo[] memory);
+
+    // The below was heavily inspired by Aloe Finance's Blend
+
     /**
      * @notice Accesses the most recently stored metadata for a given Uniswap pool
      * @dev These values may or may not have been initialized and may or may not be

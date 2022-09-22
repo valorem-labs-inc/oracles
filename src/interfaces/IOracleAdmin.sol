@@ -9,6 +9,12 @@ interface IOracleAdmin {
     event OracleSet(address indexed oracle);
 
     /**
+     * @notice Emitted when a new admin address is set for the contract.
+     * @param admin The new admin address.
+     */
+    event AdminSet(address indexed admin);
+
+    /**
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
 
@@ -20,8 +26,8 @@ interface IOracleAdmin {
 
     /**
      * @notice Sets the oracle contract address.
-     * @param oracle The contract address for the volatility oracle.
-     * @return The contract address for the volatility oracle.
+     * @param oracle The contract address for the oracle adapter.
+     * @return The contract address for the oracle adapter.
      */
     function setOracle(address oracle) external returns (address);
 }

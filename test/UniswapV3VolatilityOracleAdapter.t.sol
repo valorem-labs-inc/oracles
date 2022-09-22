@@ -6,7 +6,6 @@ import "v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "keep3r/solidity/interfaces/IKeep3r.sol";
 
 import "../src/UniswapV3VolatilityOracle.sol";
-import "../src/adapters/ValoremVolatilityOracleAdapter.sol";
 import "../src/interfaces/IKeep3rV2Job.sol";
 import "../src/interfaces/IVolatilityOracle.sol";
 
