@@ -11,7 +11,7 @@ import "valorem-core/interfaces/IOptionSettlementEngine.sol";
  * @notice Interface for pricing strategies via Black Scholes method. Volatility
  * is derived from the Uniswap pool.
  */
-interface IBlackScholes {
+interface IBlackScholes is IAdmin {
     /**
      * @notice Returns the long call premium for the supplied valorem optionId
      */
