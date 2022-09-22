@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "./IKeep3rV2Job.sol";
-import "./IOracleAdmin.sol";
+import "./IAdmin.sol";
 import "./IVolatilityOracle.sol";
 
 interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IVolatilityOracle {

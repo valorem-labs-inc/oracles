@@ -5,7 +5,7 @@ import "./interfaces/IPriceOracle.sol";
 
 import "solmate/auth/authorities/MultiRolesAuthority.sol";
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./interfaces/IOracleAdmin.sol";
+import "./interfaces/IAdmin.sol";
 
 /**
  * @notice This contract adapts the chainlink price oracle

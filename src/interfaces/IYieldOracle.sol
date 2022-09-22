@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "./IOracleAdmin.sol";
+import "./IAdmin.sol";
 
 /**
  * @notice This is an interface for contracts providing token yields.
