@@ -14,7 +14,7 @@ library FullMath {
     /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv
     function mulDiv(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
         // Handle division by zero
-        require(denominator != 0);
+        require(denominator != 0, "mulDiv: divide by zero");
 
         // 512-bit multiply [prod1 prod0] = a * b
         // Compute the product mod 2**256 and mod 2**256 - 1
@@ -46,7 +46,7 @@ library FullMath {
         ///////////////////////////////////////////////
 
         // Handle overflow, the result must be < 2**256
-        require(prod1 < denominator);
+        require(prod1 < denominator, "mulDiv: overflow");
 
         // Make division exact by subtracting the remainder from [prod1 prod0]
         // Compute remainder using mulmod
@@ -121,7 +121,7 @@ library FullMath {
     function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
         result = mulDiv(a, b, denominator);
         if (mulmod(a, b, denominator) > 0) {
-            require(result < type(uint256).max);
+            require(result < type(uint256).max, "mulDivRoundingUp: overflow");
             result++;
         }
     }

@@ -17,8 +17,6 @@
     "lint:check": "npm run fmt:check && npm run solhint:check"
   },
   "devDependencies": {
-    "solhint": "^3.3.6"
-  },
-  "dependencies": {
+    "solhint": "^3.3.7"
   }
 }

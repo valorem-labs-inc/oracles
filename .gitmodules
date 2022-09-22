@@ -13,3 +13,12 @@
 [submodule "lib/valorem-core"]
 	path = lib/valorem-core
 	url = https://github.com/valorem-labs-inc/valorem-core.git
+[submodule "lib/keep3r-network-v2"]
+	path = lib/keep3r-network-v2
+	url = https://github.com/keep3r-network/keep3r-network-v2.git
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink.git
+[submodule "lib/v3-periphery"]
+	path = lib/v3-periphery
+	url = https://github.com/Uniswap/v3-periphery.git

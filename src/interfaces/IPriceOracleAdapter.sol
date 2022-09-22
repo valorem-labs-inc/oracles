@@ -10,7 +10,7 @@ import "solmate/tokens/ERC20.sol";
  * various price oracles. An external price oracle can be used seamlessly
  * by being wrapped in a contract implementing this interface.
  */
-interface IPriceOracle {
+interface IPriceOracleAdapter {
     /**
      * @notice
      * @param token The ERC20 token to retrieve the USD price for

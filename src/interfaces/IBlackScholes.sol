@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "./IVolatilityOracle.sol";
-import "./IPriceOracle.sol";
+import "./IVolatilityOracleAdapter.sol";
+import "./IPriceOracleAdapter.sol";
 import "./IYieldOracle.sol";
 
 import "valorem-core/interfaces/IOptionSettlementEngine.sol";
@@ -24,8 +24,8 @@ interface IBlackScholes {
 
     function getLongCallPremiumEx(
         uint256 optionId,
-        IVolatilityOracle volatilityOracle,
-        IPriceOracle priceOracle,
+        IVolatilityOracleAdapter volatilityOracle,
+        IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
@@ -35,8 +35,8 @@ interface IBlackScholes {
 
     function getShortCallPremiumEx(
         uint256 optionId,
-        IVolatilityOracle volatilityOracle,
-        IPriceOracle priceOracle,
+        IVolatilityOracleAdapter volatilityOracle,
+        IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     )
@@ -47,12 +47,12 @@ interface IBlackScholes {
     /**
      * @notice sets the oracle from which to retrieve historical or implied volatility
      */
-    function setVolatilityOracle(IVolatilityOracle oracle) external;
+    function setVolatilityOracle(IVolatilityOracleAdapter oracle) external;
 
     /**
      * @notice sets the oracle from which to retrieve the underlying asset price
      */
-    function setPriceOracle(IPriceOracle oracle) external;
+    function setPriceOracle(IPriceOracleAdapter oracle) external;
 
     /**
      * @notice sets the yield oracle for the risk free rate

@@ -11,6 +11,7 @@ contract VolatilityOracleTest is Test {
 
     function setUp() public {
         volatilityOracle = new VolatilityOracle();
+        // USDC-USDT
         pool = IUniswapV3Pool(0x3416cF6C708Da44DB2624D63ea0AAef7113527C6);
     }
 
