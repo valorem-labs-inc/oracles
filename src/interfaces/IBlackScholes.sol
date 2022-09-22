@@ -28,10 +28,7 @@ interface IBlackScholes {
         IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
-    )
-        external
-        view
-        returns (uint256 callPremium);
+    ) external view returns (uint256 callPremium);
 
     function getShortCallPremiumEx(
         uint256 optionId,
@@ -39,10 +36,7 @@ interface IBlackScholes {
         IPriceOracleAdapter priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
-    )
-        external
-        view
-        returns (uint256 callPremium);
+    ) external view returns (uint256 callPremium);
 
     /**
      * @notice sets the oracle from which to retrieve historical or implied volatility
