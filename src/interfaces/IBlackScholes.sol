@@ -24,16 +24,16 @@ interface IBlackScholes {
 
     function getLongCallPremiumEx(
         uint256 optionId,
-        IVolatilityOracleAdapter volatilityOracle,
-        IPriceOracleAdapter priceOracle,
+        IVolatilityOracle volatilityOracle,
+        IPriceOracle priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     ) external view returns (uint256 callPremium);
 
     function getShortCallPremiumEx(
         uint256 optionId,
-        IVolatilityOracleAdapter volatilityOracle,
-        IPriceOracleAdapter priceOracle,
+        IVolatilityOracle volatilityOracle,
+        IPriceOracle priceOracle,
         IYieldOracle yieldOracle,
         IOptionSettlementEngine engine
     ) external view returns (uint256 callPremium);
@@ -41,12 +41,12 @@ interface IBlackScholes {
     /**
      * @notice sets the oracle from which to retrieve historical or implied volatility
      */
-    function setVolatilityOracle(IVolatilityOracleAdapter oracle) external;
+    function setVolatilityOracle(IVolatilityOracle oracle) external;
 
     /**
      * @notice sets the oracle from which to retrieve the underlying asset price
      */
-    function setPriceOracle(IPriceOracleAdapter oracle) external;
+    function setPriceOracle(IPriceOracle oracle) external;
 
     /**
      * @notice sets the yield oracle for the risk free rate
