@@ -3,8 +3,8 @@ pragma solidity 0.8.13;
 
 import "../interfaces/IValoremVolatilityOracleAdapter.sol";
 
-import "../libraries/aloe/interfaces/IVolatilityOracle.sol";
-import "../libraries/aloe/VolatilityOracle.sol";
+import "../interfaces/IVolatilityOracle.sol";
+import "../VolatilityOracle.sol";
 
 import "v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
