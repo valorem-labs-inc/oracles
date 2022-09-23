@@ -64,13 +64,19 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
 
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
-            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01)
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+            )
         );
         defaultTokenRefreshList.push(
-            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01)
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+            )
         );
         defaultTokenRefreshList.push(
-            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_3)
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
+            )
         );
     }
 
@@ -169,9 +175,7 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
     function assertEq(
         IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory a,
         IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory b
-    )
-        internal
-    {
+    ) internal {
         // from forg-std/src/Test.sol
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [UniswapV3PoolInfo[]]");
