@@ -12,15 +12,9 @@ import "solmate/tokens/ERC20.sol";
  */
 interface IPriceOracle {
     /**
-     * @notice
+     * @notice Returns the price against USD for a specific ERC20, sourced from chainlink.
      * @param token The ERC20 token to retrieve the USD price for
-     * @return price The price of the token in USD
+     * @return price The price of the token in USD, scale The power of 10 by which the return is scaled
      */
-    function getPriceUSD(address token) external view returns (uint256 price);
-
-    /**
-     * @notice Returns the scaling factor for the price
-     * @return scale The power of 10 by which the return is scaled
-     */
-    function scale() external view returns (uint8 scale);
+    function getPriceUSD(address token) external view returns (uint256 price, uint8 scale);
 }
