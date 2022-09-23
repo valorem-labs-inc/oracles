@@ -16,7 +16,7 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
+contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
     using stdStorage for StdStorage;
 
     event LogString(string topic);
@@ -25,7 +25,7 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     event LogInt(string topic, int256 info);
     event LogPoolObs(string msg, address pool, uint16 obsInd, uint16 obsCard);
 
-    // IValoremVolatilityOracleAdapter events
+    // IUniswapV3VolatilityOracle events
     event VolatilityOracleSet(address indexed oracle);
     event VolatilityOracleCacheUpdated(uint256 timestamp);
     event TokenVolatilityUpdated(
@@ -34,7 +34,6 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     event AdminSet(address indexed admin);
     event TokenRefreshListSet();
 
-    VolatilityOracle public volatilityOracle;
     address private constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
 
     address private constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
@@ -54,58 +53,54 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     /// @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
     uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
 
-    ValoremVolatilityOracleAdapter public adapter;
+    UniswapV3VolatilityOracle public oracle;
 
-    IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] private defaultTokenRefreshList;
+    IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] private defaultTokenRefreshList;
 
     function setUp() public {
-        volatilityOracle = new VolatilityOracle();
+        oracle = new UniswapV3VolatilityOracle(KEEP3R_ADDRESS);
 
-        adapter = new ValoremVolatilityOracleAdapter(
-            address(volatilityOracle),
-            KEEP3R_ADDRESS);
-
-        vm.makePersistent(address(volatilityOracle), address(adapter));
+        vm.makePersistent(address(oracle));
 
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                FUN_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_01
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo(
-                WETH_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier.PCT_POINT_3
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
+                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
             )
         );
     }
 
     function testAdmin() public {
-        adapter.setVolatilityOracle(address(0));
+        oracle.setAdmin(address(0));
 
         // some random addr
         vm.prank(address(1));
         vm.expectRevert(bytes("!ADMIN"));
-        adapter.setVolatilityOracle(address(this));
+        oracle.setAdmin(address(this));
 
         vm.expectEmit(true, false, false, false);
         emit AdminSet(address(1));
-        adapter.setAdmin(address(1));
+        oracle.setAdmin(address(1));
         vm.expectRevert(bytes("!ADMIN"));
-        adapter.setVolatilityOracle(address(this));
+        oracle.setAdmin(address(this));
     }
 
     function testGetUniswapV3Pool() public {
-        IUniswapV3Pool pool = adapter.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_ONE_PCT_FEE);
+        IUniswapV3Pool pool = oracle.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_ONE_PCT_FEE);
         // USDC / DAI @ .01 pct
         assertEq(address(pool), 0x5777d92f208679DB4b9778590Fa3CAB3aC9e2168);
 
-        pool = adapter.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_FIVE_PCT_FEE);
+        pool = oracle.getV3PoolForTokensAndFee(USDC_ADDRESS, DAI_ADDRESS, POINT_ZERO_FIVE_PCT_FEE);
         // USDC / DAI @ .05 pct
         assertEq(address(pool), 0x6c6Bc977E13Df9b0de53b251522280BB72383700);
     }
@@ -113,53 +108,52 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
     function testSetRefreshTokenList() public {
         vm.expectEmit(false, false, false, false);
         emit TokenRefreshListSet();
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
 
-        IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory returnedRefreshList =
-            adapter.getTokenFeeTierRefreshList();
+        IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory returnedRefreshList = oracle.getTokenFeeTierRefreshList();
         assertEq(defaultTokenRefreshList, returnedRefreshList);
     }
 
     function testTokenVolatilityRefresh() public {
         // move forward 1 hour to allow for aloe data requirement
         vm.warp(block.timestamp + 1 hours + 1);
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
 
         for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
             address tokenA = defaultTokenRefreshList[i].tokenA;
             address tokenB = defaultTokenRefreshList[i].tokenB;
-            IValoremVolatilityOracleAdapter.UniswapV3FeeTier feeTier = defaultTokenRefreshList[i].feeTier;
-            uint24 fee = adapter.getUniswapV3FeeInHundredthsOfBip(feeTier);
+            IUniswapV3VolatilityOracle.UniswapV3FeeTier feeTier = defaultTokenRefreshList[i].feeTier;
+            uint24 fee = oracle.getUniswapV3FeeInHundredthsOfBip(feeTier);
             vm.expectEmit(true, true, false, false);
             emit TokenVolatilityUpdated(tokenA, tokenB, fee, 0, 0);
         }
         vm.expectEmit(false, false, false, true);
         emit VolatilityOracleCacheUpdated(block.timestamp);
-        uint256 ts = adapter.refreshVolatilityCache();
+        uint256 ts = oracle.refreshVolatilityCache();
         assertEq(ts, block.timestamp);
     }
 
     function testGetImpliedVolatility() public {
         // move forward 1 hour to allow for aloe data requirement
         vm.warp(block.timestamp + 1 hours + 1);
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         _cache1d();
         emit LogString("cached one day");
         for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo storage poolInfo = defaultTokenRefreshList[i];
             _validateCachedVolatilityForPool(poolInfo);
         }
     }
 
     function testKeep3r() public {
         vm.expectRevert(IKeep3rV2Job.InvalidKeeper.selector);
-        adapter.work();
+        oracle.work();
 
         vm.warp(block.timestamp + 1 hours + 1);
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
         vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.isKeeper.selector), abi.encode(true));
         vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.worked.selector), abi.encode(""));
-        adapter.work();
+        oracle.work();
     }
 
     /**
@@ -181,9 +175,11 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
      * ///////// HELPERS //////////
      */
     function assertEq(
-        IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory a,
-        IValoremVolatilityOracleAdapter.UniswapV3PoolInfo[] memory b
-    ) internal {
+        IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory a,
+        IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory b
+    )
+        internal
+    {
         // from forg-std/src/Test.sol
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [UniswapV3PoolInfo[]]");
@@ -191,31 +187,29 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
         }
     }
 
-    function _validateCachedVolatilityForPool(IValoremVolatilityOracleAdapter.UniswapV3PoolInfo storage poolInfo)
-        internal
-    {
+    function _validateCachedVolatilityForPool(IUniswapV3VolatilityOracle.UniswapV3PoolInfo storage poolInfo) internal {
         address tokenA = poolInfo.tokenA;
         address tokenB = poolInfo.tokenB;
-        IUniswapV3VolatilityOracleAdapter.UniswapV3FeeTier feeTier = poolInfo.feeTier;
-        uint256 iv = adapter.getImpliedVolatility(tokenA, tokenB, feeTier);
+        IUniswapV3VolatilityOracle.UniswapV3FeeTier feeTier = poolInfo.feeTier;
+        uint256 iv = oracle.getImpliedVolatility(tokenA, tokenB, feeTier);
         assertFalse(iv == 0, "Volatility is expected to have been refreshed");
     }
 
     function _cache1d() internal {
         // get 24 hours
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
-        adapter.refreshVolatilityCache();
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.refreshVolatilityCache();
         for (uint256 i = 0; i < 24; i++) {
             emit LogUint("cached hour", i);
             // fuzz trades
             _simulateUniswapMovements();
-            adapter.refreshVolatilityCache();
+            oracle.refreshVolatilityCache();
             // refresh the pool metadata
             vm.warp(block.timestamp + 1 hours + 1);
         }
 
         vm.warp(block.timestamp + 3 hours);
-        adapter.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
     }
 
     function _simulateUniswapMovements() internal {
@@ -224,9 +218,9 @@ contract ValoremVolatilityOracleAdapterTest is Test, IUniswapV3SwapCallback {
 
         // iterate pools
         for (uint256 i = 0; i < defaultTokenRefreshList.length; i++) {
-            IValoremVolatilityOracleAdapter.UniswapV3PoolInfo memory poolInfo = defaultTokenRefreshList[i];
-            uint24 fee = adapter.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
-            IUniswapV3Pool pool = adapter.getV3PoolForTokensAndFee(poolInfo.tokenA, poolInfo.tokenB, fee);
+            IUniswapV3VolatilityOracle.UniswapV3PoolInfo memory poolInfo = defaultTokenRefreshList[i];
+            uint24 fee = oracle.getUniswapV3FeeInHundredthsOfBip(poolInfo.feeTier);
+            IUniswapV3Pool pool = oracle.getV3PoolForTokensAndFee(poolInfo.tokenA, poolInfo.tokenB, fee);
             bool zeroForOne = pool.token0() == DAI_ADDRESS;
             // swap tokens on each pool
             (int256 amount0, int256 amount1) = pool.swap(

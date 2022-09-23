@@ -6,14 +6,7 @@ import "./IKeep3rV2Job.sol";
 import "./IAdmin.sol";
 import "./IVolatilityOracle.sol";
 
-interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IVolatilityOracle {
-    enum UniswapV3FeeTier {
-        PCT_POINT_01,
-        PCT_POINT_05,
-        PCT_POINT_3,
-        PCT_1
-    }
-
+interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle {
     /**
      * ////////// STRUCTS /////////////
      */

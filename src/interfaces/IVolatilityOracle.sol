@@ -9,6 +9,13 @@ pragma solidity 0.8.13;
  * by being wrapped in a contract implementing this interface.
  */
 interface IVolatilityOracle {
+    enum UniswapV3FeeTier {
+        PCT_POINT_01,
+        PCT_POINT_05,
+        PCT_POINT_3,
+        PCT_1
+    }
+
     /**
      * @notice Retrieves the historical volatility of a ERC20 token.
      * @param token The ERC20 token for which to retrieve historical volatility.
@@ -20,13 +27,18 @@ interface IVolatilityOracle {
      * @notice Retrieves the implied volatility of a ERC20 token.
      * @param tokenA The ERC20 token for which to retrieve historical volatility.
      * @param tokenB The ERC20 token for which to retrieve historical volatility.
+     * @param tier The Uniswap fee tier for the desired pool on which to derive a
+     * volatility measurement.
      * @return impliedVolatility The implied volatility of the token, scaled by 1e18
      */
-    function getImpliedVolatility(address tokenA, address tokenB) external view returns (uint256 impliedVolatility);
+    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        external
+        view
+        returns (uint256 impliedVolatility);
 
     /**
      * @notice Returns the scaling factor for the volatility
      * @return scale The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint8 scale);
+    function scale() external view returns (uint16 scale);
 }

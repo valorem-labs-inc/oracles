@@ -59,7 +59,11 @@ library Volatility {
         PoolData memory data,
         FeeGrowthGlobals memory a,
         FeeGrowthGlobals memory b
-    ) internal pure returns (uint256) {
+    )
+        internal
+        pure
+        returns (uint256)
+    {
         uint256 volumeGamma0Gamma1;
         {
             uint128 revenue0Gamma1 = computeRevenueGamma(
@@ -126,7 +130,11 @@ library Volatility {
         uint160 secondsPerLiquidityX128,
         uint32 secondsAgo,
         uint24 gamma
-    ) internal pure returns (uint128) {
+    )
+        internal
+        pure
+        returns (uint128)
+    {
         unchecked {
             uint256 temp;
 
@@ -179,7 +187,11 @@ library Volatility {
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,
         uint128 liquidity
-    ) private pure returns (uint256 value0, uint256 value1) {
+    )
+        private
+        pure
+        returns (uint256 value0, uint256 value1)
+    {
         assert(sqrtRatioAX96 <= sqrtRatioX96 && sqrtRatioX96 <= sqrtRatioBX96);
 
         unchecked {

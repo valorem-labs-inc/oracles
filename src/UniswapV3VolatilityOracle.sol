@@ -9,7 +9,10 @@ import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "./utils/Keep3rV2Job.sol";
 import "./interfaces/IVolatilityOracle.sol";
 
-contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV2Job {
+import "./libraries/Volatility.sol";
+import "./libraries/Oracle.sol";
+
+contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /**
      * /////////// CONSTANTS ////////////
      */
@@ -38,7 +41,6 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
     mapping(IUniswapV3Pool => Indices) public feeGrowthGlobalsIndices;
 
     IUniswapV3Factory private uniswapV3Factory;
-    IUniswapV3VolatilityOracle private volatilityOracle;
 
     IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] private tokenFeeTierList;
 
@@ -49,15 +51,15 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
     }
 
     /**
-     * /////////// IUniswapV3VolatilityOracleAdapter //////////
+     * /////////// IVolatilityOracle //////////
      */
 
-    /// @inheritdoc IUniswapV3VolatilityOracle
+    /// @inheritdoc IVolatilityOracle
     function getHistoricalVolatility(address) external pure returns (uint256) {
         revert("not implemented");
     }
 
-    /// @inheritdoc IUniswapV3VolatilityOracle
+    /// @inheritdoc IVolatilityOracle
     function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
         external
         view
@@ -66,14 +68,18 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
         uint256[25] memory loadedLens = lens(pool);
-        (uint8 idx,) = feeGrowthGlobalsIndices(pool);
-        return loadedLens[idx];
+        Indices memory idxs = feeGrowthGlobalsIndices[pool];
+        return loadedLens[idxs.read];
     }
 
-    /// @inheritdoc IUniswapV3VolatilityOracle
+    /// @inheritdoc IVolatilityOracle
     function scale() external pure returns (uint16) {
         return 18;
     }
+
+    /**
+     * /////////// IUniswapV3VolatilityOracle //////////
+     */
 
     /// @inheritdoc IUniswapV3VolatilityOracle
     function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
@@ -108,7 +114,7 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
      * ////////////// TOKEN REFRESH LIST ///////////////
      */
 
-    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracle
     function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
         requiresAdmin(msg.sender)
@@ -125,7 +131,7 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
         return list;
     }
 
-    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracle
     function getTokenFeeTierRefreshList() public view returns (UniswapV3PoolInfo[] memory) {
         return tokenFeeTierList;
     }
@@ -134,20 +140,13 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
 
-    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
-    function setVolatilityOracle(address oracle) external requiresAdmin(msg.sender) returns (address) {
-        volatilityOracle = IUniswapV3VolatilityOracle(oracle);
-        emit VolatilityOracleSet(oracle);
-        return oracle;
-    }
-
     function setAdmin(address _admin) external requiresAdmin(msg.sender) {
         require(_admin != address(0x0), "INVALID ADMIN");
         admin = _admin;
         emit AdminSet(_admin);
     }
 
-    /// @inheritdoc IUniswapV3VolatilityOracleAdapter
+    /// @inheritdoc IUniswapV3VolatilityOracle
     function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) public pure returns (uint24) {
         if (tier == UniswapV3FeeTier.PCT_POINT_01) {
             return 1 * 100;
@@ -191,7 +190,6 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
         // the oldest observation for the pool oracle is under an hour. for now,
         // we're only refreshing the pool metadata cache when the token is added to the
         // refresh list, and when a manual call to refresh a token is made.
-        // volatilityOracle.cacheMetadataFor(pool);
         uint256 impliedVolatility = estimate24H(pool);
         emit TokenVolatilityUpdated(tokenA, tokenB, fee, impliedVolatility, block.timestamp);
         return (impliedVolatility, block.timestamp);
@@ -200,11 +198,11 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
     function _refreshPoolMetadata(UniswapV3PoolInfo memory info) internal {
         uint24 fee = getUniswapV3FeeInHundredthsOfBip(info.feeTier);
         IUniswapV3Pool pool = getV3PoolForTokensAndFee(info.tokenA, info.tokenB, fee);
-        volatilityOracle.cacheMetadataFor(pool);
+        cacheMetadataFor(pool);
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
-    function cacheMetadataFor(IUniswapV3Pool pool) external {
+    function cacheMetadataFor(IUniswapV3Pool pool) public {
         Volatility.PoolMetadata memory poolMetadata;
 
         (,, uint16 observationIndex, uint16 observationCardinality,, uint8 feeProtocol,) = pool.slot0();
@@ -226,7 +224,7 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
-    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory impliedVolatility) {
+    function lens(IUniswapV3Pool pool) public view returns (uint256[25] memory impliedVolatility) {
         (uint160 sqrtPriceX96, int24 tick,,,,,) = pool.slot0();
         Volatility.FeeGrowthGlobals[25] memory feeGrowthGlobal = feeGrowthGlobals[pool];
 
@@ -236,7 +234,7 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
-    function estimate24H(IUniswapV3Pool pool) external returns (uint256 impliedVolatility) {
+    function estimate24H(IUniswapV3Pool pool) public returns (uint256 impliedVolatility) {
         (uint160 sqrtPriceX96, int24 tick,,,,,) = pool.slot0();
 
         Volatility.FeeGrowthGlobals[25] storage feeGrowthGlobal = feeGrowthGlobals[pool];
@@ -258,7 +256,11 @@ contract UniswapV3VolatilityOracleAdapter is IUniswapV3VolatilityOracle, Keep3rV
         uint160 _sqrtPriceX96,
         int24 _tick,
         Volatility.FeeGrowthGlobals memory _previous
-    ) private view returns (uint256 impliedVolatility, Volatility.FeeGrowthGlobals memory current) {
+    )
+        private
+        view
+        returns (uint256 impliedVolatility, Volatility.FeeGrowthGlobals memory current)
+    {
         Volatility.PoolMetadata memory poolMetadata = cachedPoolMetadata[_pool];
 
         uint32 secondsAgo = poolMetadata.maxSecondsAgo;
