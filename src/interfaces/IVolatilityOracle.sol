@@ -1,68 +1,44 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: BUSL 1.1
+pragma solidity 0.8.13;
 
-import "v3-core/contracts/interfaces/IUniswapV3Pool.sol";
-
-/// From https://github.com/aloelabs/aloe-blend
+/**
+ * @notice This is an interface for contracts providing historical volatility,
+ * implied volatility, or both.
+ * This is used internally in order to provide a uniform way of interacting with
+ * various volatility oracles. An external volatility oracle can be used seamlessly
+ * by being wrapped in a contract implementing this interface.
+ */
 interface IVolatilityOracle {
+    enum UniswapV3FeeTier {
+        PCT_POINT_01,
+        PCT_POINT_05,
+        PCT_POINT_3,
+        PCT_1
+    }
+
     /**
-     * @notice Accesses the most recently stored metadata for a given Uniswap pool
-     * @dev These values may or may not have been initialized and may or may not be
-     * up to date. `tickSpacing` will be non-zero if they've been initialized.
-     * @param pool The Uniswap pool for which metadata should be retrieved
-     * @return maxSecondsAgo The age of the oldest observation in the pool's oracle
-     * @return gamma0 The pool fee minus the protocol fee on token0, scaled by 1e6
-     * @return gamma1 The pool fee minus the protocol fee on token1, scaled by 1e6
-     * @return tickSpacing The pool's tick spacing
+     * @notice Retrieves the historical volatility of a ERC20 token.
+     * @param token The ERC20 token for which to retrieve historical volatility.
+     * @return historicalVolatility The historical volatility of the token, scaled by 1e18
      */
-    function cachedPoolMetadata(IUniswapV3Pool pool)
+    function getHistoricalVolatility(address token) external view returns (uint256 historicalVolatility);
+
+    /**
+     * @notice Retrieves the implied volatility of a ERC20 token.
+     * @param tokenA The ERC20 token for which to retrieve historical volatility.
+     * @param tokenB The ERC20 token for which to retrieve historical volatility.
+     * @param tier The Uniswap fee tier for the desired pool on which to derive a
+     * volatility measurement.
+     * @return impliedVolatility The implied volatility of the token, scaled by 1e18
+     */
+    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
         external
         view
-        returns (uint32 maxSecondsAgo, uint24 gamma0, uint24 gamma1, int24 tickSpacing);
+        returns (uint256 impliedVolatility);
 
     /**
-     * @notice Accesses any of the 25 most recently stored fee growth structs
-     * @dev The full array (idx=0,1,2...24) has data that spans *at least* 24 hours
-     * @param pool The Uniswap pool for which fee growth should be retrieved
-     * @param idx The index into the storage array
-     * @return feeGrowthGlobal0X128 Total pool revenue in token0, as of timestamp
-     * @return feeGrowthGlobal1X128 Total pool revenue in token1, as of timestamp
-     * @return timestamp The time at which snapshot was taken and stored
+     * @notice Returns the scaling factor for the volatility
+     * @return scale The power of 10 by which the return is scaled
      */
-    function feeGrowthGlobals(IUniswapV3Pool pool, uint256 idx)
-        external
-        view
-        returns (uint256 feeGrowthGlobal0X128, uint256 feeGrowthGlobal1X128, uint32 timestamp);
-
-    /**
-     * @notice Returns indices that the contract will use to access `feeGrowthGlobals`
-     * @param pool The Uniswap pool for which array indices should be fetched
-     * @return read The index that was closest to 24 hours old last time `estimate24H` was called
-     * @return write The index that was written to last time `estimate24H` was called
-     */
-    function feeGrowthGlobalsIndices(IUniswapV3Pool pool) external view returns (uint8 read, uint8 write);
-
-    /**
-     * @notice Updates cached metadata for a Uniswap pool. Must be called at least once
-     * in order for volatility to be determined. Should also be called whenever
-     * protocol fee changes
-     * @param pool The Uniswap pool to poke
-     */
-    function cacheMetadataFor(IUniswapV3Pool pool) external;
-
-    /**
-     * @notice Provides multiple estimates of IV using all stored `feeGrowthGlobals` entries for `pool`
-     * @dev This is not meant to be used on-chain, and it doesn't contribute to the oracle's knowledge.
-     * Please use `estimate24H` instead.
-     * @param pool The pool to use for volatility estimate
-     * @return impliedVolatility The array of volatility estimates, scaled by 1e18
-     */
-    function lens(IUniswapV3Pool pool) external view returns (uint256[25] memory impliedVolatility);
-
-    /**
-     * @notice Estimates 24-hour implied volatility for a Uniswap pool.
-     * @param pool The pool to use for volatility estimate
-     * @return impliedVolatility The estimated volatility, scaled by 1e18
-     */
-    function estimate24H(IUniswapV3Pool pool) external returns (uint256 impliedVolatility);
+    function scale() external view returns (uint16 scale);
 }

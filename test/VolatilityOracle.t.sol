@@ -3,14 +3,14 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import "../src/VolatilityOracle.sol";
+import "../src/UniswapV3VolatilityOracle.sol";
 
 contract VolatilityOracleTest is Test {
-    VolatilityOracle public volatilityOracle;
+    UniswapV3VolatilityOracle public volatilityOracle;
     IUniswapV3Pool public pool;
 
     function setUp() public {
-        volatilityOracle = new VolatilityOracle();
+        volatilityOracle = new UniswapV3VolatilityOracle(address(0));
         // USDC-USDT
         pool = IUniswapV3Pool(0x3416cF6C708Da44DB2624D63ea0AAef7113527C6);
     }
