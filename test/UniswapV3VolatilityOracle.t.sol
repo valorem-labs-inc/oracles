@@ -75,8 +75,6 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
     }
 
     function testAdmin() public {
-        oracle.setAdmin(address(0));
-
         // some random addr
         vm.prank(address(1));
         vm.expectRevert(bytes("!ADMIN"));
