@@ -12,7 +12,7 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-contract UniswapV3VolatilityOracleTest is Test {
+contract ChainlinkPriceOracleTest is Test {
     event LogString(string topic);
     event LogAddress(string topic, address info);
     event LogUint(string topic, uint256 info);
