@@ -2,15 +2,16 @@
 pragma solidity 0.8.13;
 
 import "./interfaces/IPriceOracle.sol";
+import "./interfaces/IChainlinkPriceOracleAdmin.sol";
+import "./utils/Admin.sol";
 
-import "solmate/auth/authorities/MultiRolesAuthority.sol";
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./interfaces/IAdmin.sol";
 
 /**
- * @notice This contract adapts the chainlink price oracle
+ * @notice This contract adapts the chainlink price oracle. It stores a mapping from
+ * ERC20 contract address to a chainlink price feed.
  */
-contract ChainlinkPriceOracle is IPriceOracle {
+contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin {
     /**
      * //////////// STATE /////////////
      */
@@ -21,20 +22,38 @@ contract ChainlinkPriceOracle is IPriceOracle {
      * ///////////// IPriceOracle ////////////
      */
 
-    /// IPriceOracle
+    /// @inheritdoc IPriceOracle
     function getPriceUSD(address token) external view returns (uint256 price, uint8 scale) {
         address aggregator = _getAggregator(token);
-        (int256 rawPrice, scale) = _getPrice(aggregator);
+        (int256 rawPrice, uint8 _scale) = _getPrice(aggregator);
         price = uint256(rawPrice);
+        scale = _scale;
     }
 
     /**
-    /////////// INTERNAL ////////////
+     * ///////////// IChainlinkPriceOracleAdmin ////////////
+     */
+
+    /// @inheritdoc IChainlinkPriceOracleAdmin
+    function setPriceFeed(address token, address priceFeed)
+        external
+        requiresAdmin(msg.sender)
+        returns (address, address)
+    {
+        // todo: validate token and price feed
+        tokenToUSDPriceFeed[token] = priceFeed;
+        emit PriceFeedSet(token, priceFeed);
+        return (token, priceFeed);
+    }
+
+    /**
+     * /////////// INTERNAL ////////////
      */
 
     function _getPrice(address aggregator) internal view returns (int256 price, uint8 decimals) {
-        (, int256 price,,,) = AggregatorV3Interface(aggregator).latestRoundData();
+        (, price,,,) = AggregatorV3Interface(aggregator).latestRoundData();
         decimals = AggregatorV3Interface(aggregator).decimals();
+        return (price, decimals);
     }
 
     function _getAggregator(address token) internal view returns (address aggregator) {

@@ -15,7 +15,8 @@ interface IChainlinkPriceOracleAdmin {
 
     /**
      * @notice Sets the oracle contract address.
-     * @param oracle The contract address for the oracle adapter.
+     * @param token The contract address for the erc20 contract.
+     * @param priceFeed The contract address for the chainlink price feed.
      * @return The set token and price feed.
      */
     function setPriceFeed(address token, address priceFeed) external returns (address, address);
