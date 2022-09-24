@@ -69,8 +69,8 @@ contract ChainlinkPriceOracleTest is Test {
     function testPriceFeeds() public {
         oracle.setPriceFeed(DAI_ADDRESS, DAI_USD_FEED);
         (uint256 price, uint8 scale) = oracle.getPriceUSD(DAI_ADDRESS);
+        assertEq(price, 99983112);
+        assertEq(scale, 8);
         // TODO: assert revert if feed not initialized
-        emit LogUint("dai price:", price);
-        emit LogUint("dai scale:", uint256(scale));
     }
 }

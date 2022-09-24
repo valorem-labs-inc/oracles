@@ -18,6 +18,10 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
 
     mapping(address => address) public tokenToUSDPriceFeed;
 
+    constructor() {
+        admin = msg.sender;
+    }
+
     /**
      * ///////////// IPriceOracle ////////////
      */
