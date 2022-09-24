@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 import "solmate/tokens/ERC20.sol";
+import "./IERC20.sol";
 
 /**
  * @notice This is an interface for contracts providing the price of a token, in
@@ -16,7 +17,7 @@ interface IPriceOracle {
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD
      */
-    function getPriceUSD(address token) external view returns (uint256 price);
+    function getPriceUSD(IERC20 token) external view returns (uint256 price);
 
     /**
      * @notice Returns the scaling factor for the price

@@ -26,10 +26,10 @@ contract ChainlinkPriceOracle is IPriceOracle {
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD
      */
-    function getPriceUSD(address token) external view returns (uint256) {
+    function getPriceUSD(IERC20 token) external view returns (uint256) {
         (, int256 price,,,) = chainlinkPriceOracle.latestRoundData();
         // get rid of warnings
-        uint256 tmp = uint256(uint160(token));
+        uint256 tmp = uint256(uint160(address(token)));
         uint256 price2 = uint256(price);
         return tmp + price2;
     }
