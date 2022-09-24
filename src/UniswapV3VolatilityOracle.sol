@@ -265,11 +265,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
         uint160 _sqrtPriceX96,
         int24 _tick,
         Volatility.FeeGrowthGlobals memory _previous
-    )
-        private
-        view
-        returns (uint256 impliedVolatility, Volatility.FeeGrowthGlobals memory current)
-    {
+    ) private view returns (uint256 impliedVolatility, Volatility.FeeGrowthGlobals memory current) {
         Volatility.PoolMetadata memory poolMetadata = cachedPoolMetadata[_pool];
 
         uint32 secondsAgo = poolMetadata.maxSecondsAgo;

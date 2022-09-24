@@ -187,9 +187,7 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
     function assertEq(
         IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory a,
         IUniswapV3VolatilityOracle.UniswapV3PoolInfo[] memory b
-    )
-        internal
-    {
+    ) internal {
         // from forg-std/src/Test.sol
         if (keccak256(abi.encode(a)) != keccak256(abi.encode(b))) {
             emit log("Error: a == b not satisfied [UniswapV3PoolInfo[]]");
