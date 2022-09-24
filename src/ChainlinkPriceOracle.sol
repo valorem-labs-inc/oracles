@@ -17,7 +17,6 @@ contract ChainlinkPriceOracle is IPriceOracle {
 
     mapping(address => address) public tokenToUSDPriceFeed;
 
-
     /**
      * ///////////// IPriceOracle ////////////
      */
@@ -39,16 +38,6 @@ contract ChainlinkPriceOracle is IPriceOracle {
     }
 
     function _getAggregator(address token) internal view returns (address aggregator) {
-
-    }
-
-    /**
-     * @notice Resolve ENS address to contract address.
-     * @param node The ENS node to resolve.
-     * @return The resolved contract address.
-     */
-    function resolve(bytes32 node) public view returns(address) {
-        Resolver resolver = ens.resolver(node);
-        return resolver.addr(node);
+        return tokenToUSDPriceFeed[token];
     }
 }
