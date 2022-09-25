@@ -13,13 +13,13 @@ interface IYieldOracle {
     /**
      * @notice Retrieves the yield of a given token address
      * @param token The ERC20 token address for which to retrieve yield
-     * @return tokenYield The yield for this given token
+     * @return tokenYield The per-second yield for this given token
      */
     function getTokenYield(address token) external view returns (uint256 tokenYield);
 
     /**
-     * @notice Returns the scaling factor for the price
-     * @return scale The power of 10 by which the return is scaled
+     * @notice Returns the scaling factor for the yield
+     * @return The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint16 scale);
+    function scale() external view returns (uint16);
 }
