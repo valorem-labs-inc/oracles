@@ -44,7 +44,9 @@ contract CompoundV3YieldOracleTest is Test {
     }
 
     function testGetYield() public {
-        vm.expectRevert(abi.encodeWithSelector(ICompoundV3YieldOracleAdmin.CometAddressNotSpecifiedForToken.selector, address(this)));
+        vm.expectRevert(
+            abi.encodeWithSelector(ICompoundV3YieldOracleAdmin.CometAddressNotSpecifiedForToken.selector, address(this))
+        );
         oracle.getTokenYield(address(this));
 
         uint256 yield = oracle.getTokenYield(USDC_ADDRESS);
