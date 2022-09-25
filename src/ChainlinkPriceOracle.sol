@@ -18,7 +18,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
      * //////////// STATE /////////////
      */
 
-    mapping(IERC20 => address) public tokenToUSDPriceFeed;
+    mapping(IERC20 => AggregatorV3Interface) public tokenToUSDPriceFeed;
 
     constructor() {
         admin = msg.sender;
@@ -30,7 +30,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
 
     /// @inheritdoc IPriceOracle
     function getPriceUSD(IERC20 token) external view returns (uint256 price, uint8 scale) {
-        address aggregator = _getAggregator(token);
+        AggregatorV3Interface aggregator = _getAggregator(token);
         (int256 rawPrice, uint8 _scale) = _getPrice(aggregator);
         price = uint256(rawPrice);
         scale = _scale;
@@ -41,28 +41,28 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
      */
 
     /// @inheritdoc IChainlinkPriceOracleAdmin
-    function setPriceFeed(address token, address priceFeed)
+    function setPriceFeed(IERC20 token, AggregatorV3Interface priceFeed)
         external
         requiresAdmin(msg.sender)
         returns (address, address)
     {
         // todo: validate token and price feed
         tokenToUSDPriceFeed[token] = priceFeed;
-        emit PriceFeedSet(token, priceFeed);
-        return (token, priceFeed);
+        emit PriceFeedSet(address(token), address(priceFeed));
+        return (address(token), address(priceFeed));
     }
 
     /**
      * /////////// INTERNAL ////////////
      */
 
-    function _getPrice(address aggregator) internal view returns (int256 price, uint8 decimals) {
-        (, price,,,) = AggregatorV3Interface(aggregator).latestRoundData();
-        decimals = AggregatorV3Interface(aggregator).decimals();
+    function _getPrice(AggregatorV3Interface aggregator) internal view returns (int256 price, uint8 decimals) {
+        (, price,,,) = aggregator.latestRoundData();
+        decimals = aggregator.decimals();
         return (price, decimals);
     }
 
-    function _getAggregator(IERC20 token) internal view returns (address aggregator) {
+    function _getAggregator(IERC20 token) internal view returns (AggregatorV3Interface aggregator) {
         return tokenToUSDPriceFeed[token];
     }
 }

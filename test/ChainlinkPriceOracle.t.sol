@@ -5,13 +5,6 @@ import "forge-std/Test.sol";
 
 import "../src/ChainlinkPriceOracle.sol";
 
-/// for writeBalance
-interface IERC20 {
-    function balanceOf(address) external view returns (uint256);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-}
-
 contract ChainlinkPriceOracleTest is Test {
     event LogString(string topic);
     event LogAddress(string topic, address info);
@@ -21,11 +14,12 @@ contract ChainlinkPriceOracleTest is Test {
     event AdminSet(address indexed admin);
     event PriceFeedSet(address indexed token, address indexed priceFeed);
 
-    address private constant DAI_ADDRESS = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-    address private constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address private constant WETH_ADDRESS = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    IERC20 private constant DAI_ADDRESS = IERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+    IERC20 private constant USDC_ADDRESS = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    IERC20 private constant WETH_ADDRESS = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
 
-    address private constant DAI_USD_FEED = 0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9;
+    AggregatorV3Interface private constant DAI_USD_FEED =
+        AggregatorV3Interface(0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9);
 
     ChainlinkPriceOracle public oracle;
 
@@ -51,16 +45,16 @@ contract ChainlinkPriceOracleTest is Test {
         vm.expectRevert(bytes("!ADMIN"));
         address fakeErc20 = address(2);
         address fakeFeed = address(3);
-        oracle.setPriceFeed(fakeErc20, fakeFeed);
+        oracle.setPriceFeed(IERC20(fakeErc20), AggregatorV3Interface(fakeFeed));
 
         // succeeds if admin
         vm.prank(address(1));
-        oracle.setPriceFeed(fakeErc20, fakeFeed);
+        oracle.setPriceFeed(IERC20(fakeErc20), AggregatorV3Interface(fakeFeed));
     }
 
     function testSetPriceFeeds() public {
         vm.expectEmit(true, true, false, false);
-        emit PriceFeedSet(DAI_ADDRESS, DAI_USD_FEED);
+        emit PriceFeedSet(address(DAI_ADDRESS), address(DAI_USD_FEED));
         oracle.setPriceFeed(DAI_ADDRESS, DAI_USD_FEED);
 
         // TODO: assert revert invalid feed/erc20

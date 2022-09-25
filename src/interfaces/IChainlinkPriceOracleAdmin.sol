@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
+import "./IERC20.sol";
+import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+
 interface IChainlinkPriceOracleAdmin {
     /**
      * @notice Emitted when a price feed for an ERC20 token is set.
@@ -19,5 +22,5 @@ interface IChainlinkPriceOracleAdmin {
      * @param priceFeed The contract address for the chainlink price feed.
      * @return The set token and price feed.
      */
-    function setPriceFeed(address token, address priceFeed) external returns (address, address);
+    function setPriceFeed(IERC20 token, AggregatorV3Interface priceFeed) external returns (address, address);
 }
