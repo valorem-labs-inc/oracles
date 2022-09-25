@@ -3,6 +3,8 @@ pragma solidity 0.8.13;
 
 import "./interfaces/IPriceOracle.sol";
 import "./interfaces/IChainlinkPriceOracleAdmin.sol";
+import "./interfaces/IERC20.sol";
+
 import "./utils/Admin.sol";
 
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -16,7 +18,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
      * //////////// STATE /////////////
      */
 
-    mapping(address => address) public tokenToUSDPriceFeed;
+    mapping(IERC20 => address) public tokenToUSDPriceFeed;
 
     constructor() {
         admin = msg.sender;
@@ -27,7 +29,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
      */
 
     /// @inheritdoc IPriceOracle
-    function getPriceUSD(address token) external view returns (uint256 price, uint8 scale) {
+    function getPriceUSD(IERC20 token) external view returns (uint256 price, uint8 scale) {
         address aggregator = _getAggregator(token);
         (int256 rawPrice, uint8 _scale) = _getPrice(aggregator);
         price = uint256(rawPrice);
@@ -60,7 +62,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
         return (price, decimals);
     }
 
-    function _getAggregator(address token) internal view returns (address aggregator) {
+    function _getAggregator(IERC20 token) internal view returns (address aggregator) {
         return tokenToUSDPriceFeed[token];
     }
 }
