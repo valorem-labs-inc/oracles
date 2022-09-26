@@ -177,12 +177,6 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
 
-    function setAdmin(address _admin) external requiresAdmin(msg.sender) {
-        require(_admin != address(0x0), "INVALID ADMIN");
-        admin = _admin;
-        emit AdminSet(_admin);
-    }
-
     /// @inheritdoc IUniswapV3VolatilityOracle
     function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) public pure returns (uint24) {
         if (tier == UniswapV3FeeTier.PCT_POINT_01) {

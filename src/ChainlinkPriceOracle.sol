@@ -2,43 +2,69 @@
 pragma solidity 0.8.13;
 
 import "./interfaces/IPriceOracle.sol";
+import "./interfaces/IChainlinkPriceOracleAdmin.sol";
+import "./interfaces/IERC20.sol";
 
-import "solmate/auth/authorities/MultiRolesAuthority.sol";
+import "./utils/Admin.sol";
+
 import "chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "./interfaces/IAdmin.sol";
 
 /**
- * @notice This contract adapts the chainlink price oracle
+ * @notice This contract adapts the chainlink price oracle. It stores a mapping from
+ * ERC20 contract address to a chainlink price feed.
  */
-contract ChainlinkPriceOracle is IPriceOracle {
-    AggregatorV3Interface public chainlinkPriceOracle;
+contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin {
+    /**
+     * //////////// STATE /////////////
+     */
 
-    constructor(address priceOracleAddress) {
-        chainlinkPriceOracle = AggregatorV3Interface(priceOracleAddress);
+    mapping(IERC20 => AggregatorV3Interface) public tokenToUSDPriceFeed;
+
+    constructor() {
+        admin = msg.sender;
     }
 
     /**
-     * ///////////// IPriceOracleAdapter ////////////
+     * ///////////// IPriceOracle ////////////
      */
 
-    /**
-     * @notice
-     * @param token The ERC20 token to retrieve the USD price for
-     * @return price The price of the token in USD
-     */
-    function getPriceUSD(address token) external view returns (uint256) {
-        (, int256 price,,,) = chainlinkPriceOracle.latestRoundData();
-        // get rid of warnings
-        uint256 tmp = uint256(uint160(token));
-        uint256 price2 = uint256(price);
-        return tmp + price2;
+    /// @inheritdoc IPriceOracle
+    function getPriceUSD(IERC20 token) external view returns (uint256 price, uint8 scale) {
+        AggregatorV3Interface aggregator = _getAggregator(token);
+        (int256 rawPrice, uint8 _scale) = _getPrice(aggregator);
+        price = uint256(rawPrice);
+        scale = _scale;
     }
 
     /**
-     * @notice Returns the scaling factor for the price
-     * @return scale The power of 10 by which the return is scaled
+     * ///////////// IChainlinkPriceOracleAdmin ////////////
      */
-    function scale() external view returns (uint8) {
-        return chainlinkPriceOracle.decimals();
+
+    /// @inheritdoc IChainlinkPriceOracleAdmin
+    function setPriceFeed(IERC20 token, AggregatorV3Interface priceFeed)
+        external
+        requiresAdmin(msg.sender)
+        returns (address, address)
+    {
+        // todo: validate token and price feed
+        tokenToUSDPriceFeed[token] = priceFeed;
+        emit PriceFeedSet(address(token), address(priceFeed));
+        return (address(token), address(priceFeed));
+    }
+
+    /**
+     * /////////// INTERNAL ////////////
+     */
+
+    function _getPrice(AggregatorV3Interface aggregator) internal view returns (int256 price, uint8 decimals) {
+        /// @dev N.b. this is not a spot price from a particular dex. Using chainlink
+        /// aggregators imparts resistance to flash price movement attacks.
+        (, price,,,) = aggregator.latestRoundData();
+        decimals = aggregator.decimals();
+        return (price, decimals);
+    }
+
+    function _getAggregator(IERC20 token) internal view returns (AggregatorV3Interface aggregator) {
+        return tokenToUSDPriceFeed[token];
     }
 }
