@@ -57,7 +57,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
      */
 
     function _getPrice(AggregatorV3Interface aggregator) internal view returns (int256 price, uint8 decimals) {
-        /// @dev N.b. this is not a spot price from a particular dex. Using chainlink 
+        /// @dev N.b. this is not a spot price from a particular dex. Using chainlink
         /// aggregators imparts resistance to flash price movement attacks.
         (, price,,,) = aggregator.latestRoundData();
         decimals = aggregator.decimals();
