@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL 1.1
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.13;
 
 /// @dev Taken from https://github.com/compound-developers/compound-3-developer-faq/blob/master/contracts/MyContract.sol
