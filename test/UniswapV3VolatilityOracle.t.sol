@@ -89,8 +89,20 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
         vm.expectEmit(true, false, false, false);
         emit AdminSet(address(1));
         oracle.setAdmin(address(1));
+
         vm.expectRevert(bytes("!ADMIN"));
         oracle.setAdmin(address(this));
+
+        vm.expectRevert(bytes("!ADMIN"));
+        oracle.refreshVolatilityCacheAndMetadataForPool(defaultTokenRefreshList[0]);
+
+        vm.expectRevert(bytes("!ADMIN"));
+        oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+
+        // USDC-USDT
+        IUniswapV3Pool pool = IUniswapV3Pool(0x3416cF6C708Da44DB2624D63ea0AAef7113527C6);
+        vm.expectRevert(bytes("!ADMIN"));
+        oracle.cacheMetadataFor(pool);
     }
 
     function testGetUniswapV3Pool() public {
