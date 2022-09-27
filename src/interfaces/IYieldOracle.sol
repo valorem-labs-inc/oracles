@@ -21,5 +21,5 @@ interface IYieldOracle {
      * @notice Returns the scaling factor for the yield
      * @return The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint16);
+    function scale() external view returns (uint8);
 }

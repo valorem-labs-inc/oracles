@@ -42,7 +42,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
     }
 
     /// @inheritdoc IYieldOracle
-    function scale() public pure returns (uint16) {
+    function scale() public pure returns (uint8) {
         return 18;
     }
 
