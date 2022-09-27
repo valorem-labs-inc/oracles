@@ -3,9 +3,10 @@ pragma solidity 0.8.13;
 
 import "./interfaces/ICompoundV3YieldOracleAdmin.sol";
 import "./interfaces/IComet.sol";
-// import "./utils/Admin.sol";
+import "./interfaces/IERC20.sol";
+import "./utils/Admin.sol";
 
-contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
+contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
     /**
      * /////////// CONSTANTS ///////////////
      */
@@ -16,8 +17,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
      * ///////////// STATE ///////////////
      */
 
-    // TODO: ERC20 interface
-    mapping(address => IComet) public tokenAddressToComet;
+    mapping(IERC20 => IComet) public tokenAddressToComet;
 
     constructor() {
         //admin = msg.sender;
@@ -31,7 +31,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
     /// @dev compound III / comet is currently deployed/implemented only on USDC
     /// @inheritdoc IYieldOracle
     function getTokenYield(address token) public view returns (uint256 yield) {
-        IComet comet = tokenAddressToComet[token];
+        IComet comet = tokenAddressToComet[IERC20(token)];
         if (address(comet) == address(0)) {
             revert CometAddressNotSpecifiedForToken(token);
         }
@@ -52,7 +52,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
 
     /// @inheritdoc ICompoundV3YieldOracleAdmin
     function setCometAddress(address baseAssetErc20, address comet)
-        public /* requiresAdmin(msg.sender) */
+        public
+        requiresAdmin(msg.sender)
         returns (address, address)
     {
         if (baseAssetErc20 == address(0)) {
@@ -62,8 +63,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin /*, Admin */ {
             revert InvalidCometAddress();
         }
 
-        IComet _comet = IComet(comet);
-        tokenAddressToComet[baseAssetErc20] = _comet;
+        tokenAddressToComet[IERC20(baseAssetErc20)] = IComet(comet);
 
         emit CometSet(baseAssetErc20, comet);
         return (baseAssetErc20, comet);
