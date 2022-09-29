@@ -101,4 +101,6 @@ interface IComet {
     function baseToken() external view returns (address);
     function baseTokenPriceFeed() external view returns (address);
     function extensionDelegate() external view returns (address);
+
+    function totalsCollateral(address addr) external view returns (TotalsCollateral memory);
 }
