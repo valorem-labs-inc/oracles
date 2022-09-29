@@ -137,34 +137,19 @@ contract CompoundV3YieldOracleTest is Test {
         emit LogUint("Amount to supply cap", uint256(amountToSupplyCap));
     }
 
-    function _getAndLogUtilization()
-        internal
-        returns (
-            uint256 utilization
-        )
-    {
+    function _getAndLogUtilization() internal returns (uint256 utilization) {
         utilization = COMET_USDC.getUtilization();
         emit LogUint("cUSDCv3 utilization", utilization);
     }
 
-    function _getAndLogSupplyRate()
-        internal 
-        returns (
-            uint256 supplyRate
-        )
-    {
+    function _getAndLogSupplyRate() internal returns (uint256 supplyRate) {
         uint256 utilization = _getAndLogUtilization();
         supplyRate = COMET_USDC.getSupplyRate(utilization);
         emit LogUint("cUSDCv3 supply rate (apr)", _perSecondRateToApr(supplyRate));
     }
 
-    function _getAndLogOracleYield()
-        internal 
-        returns (
-            uint256 yield
-        )
-    {
-        yield =oracle.getTokenYield(address(USDC));
+    function _getAndLogOracleYield() internal returns (uint256 yield) {
+        yield = oracle.getTokenYield(address(USDC));
         emit LogUint("USDC oracle yield (apr)", _perSecondRateToApr(yield));
     }
 
