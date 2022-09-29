@@ -80,7 +80,6 @@ contract CompoundV3YieldOracleTest is Test {
     function testMaxRateSwing() public {
         // grant a lot of ETH
         _writeTokenBalance(address(this), address(WETH), 1_000_000_000 ether);
-
         WETH.approve(address(COMET_USDC), 1_000_000_000 ether);
 
         (
@@ -90,10 +89,11 @@ contract CompoundV3YieldOracleTest is Test {
             uint128 wethSupplyCap,
             uint256 amountToSupplyCap
         ) = _getAndLogCometInfo();
-        uint256 supplyRate = _getAndLogSupplyRate();
+
+        (uint256 supplyRate,) = _logAndValidateYieldAgainstOracle();
         COMET_USDC.supply(address(WETH), amountToSupplyCap);
         _getAndLogCometInfo();
-        uint256 supplyRate2 = _getAndLogSupplyRate();
+        (uint256 supplyRate2,) = _logAndValidateYieldAgainstOracle();
 
         assertEq(supplyRate, supplyRate2);
         assertTrue(COMET_USDC.isBorrowCollateralized(address(this)));
@@ -103,7 +103,7 @@ contract CompoundV3YieldOracleTest is Test {
 
         // flex utilization limits
         COMET_USDC.withdraw(address(USDC), toBorrow * usdcScale);
-        uint256 supplyRate3 = _getAndLogSupplyRate();
+        (uint256 supplyRate3,) = _logAndValidateYieldAgainstOracle();
         assertGt(supplyRate3, supplyRate2);
     }
 
@@ -154,9 +154,24 @@ contract CompoundV3YieldOracleTest is Test {
         )
     {
         uint256 utilization = _getAndLogUtilization();
-        uint256 supplyRatePerSecond = COMET_USDC.getSupplyRate(utilization);
-        supplyRate = _perSecondRateToApr(supplyRatePerSecond);
-        emit LogUint("cUSDCv3 supply rate (apr)", supplyRate);
+        supplyRate = COMET_USDC.getSupplyRate(utilization);
+        emit LogUint("cUSDCv3 supply rate (apr)", _perSecondRateToApr(supplyRate));
+    }
+
+    function _getAndLogOracleYield()
+        internal 
+        returns (
+            uint256 yield
+        )
+    {
+        yield =oracle.getTokenYield(address(USDC));
+        emit LogUint("USDC oracle yield (apr)", _perSecondRateToApr(yield));
+    }
+
+    function _logAndValidateYieldAgainstOracle() internal returns (uint256 supplyRate, uint256 yield) {
+        supplyRate = _getAndLogSupplyRate();
+        yield = _getAndLogOracleYield();
+        assertEq(supplyRate, yield);
     }
 
     function _perSecondRateToApr(uint256 perSecondRate) internal pure returns (uint256 apr) {
