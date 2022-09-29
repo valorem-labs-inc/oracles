@@ -5,6 +5,15 @@ import "./IYieldOracle.sol";
 
 interface ICompoundV3YieldOracleAdmin is IYieldOracle {
     /**
+     * /////////// STRUCTS /////////////
+     */
+
+    struct SupplyRateSnapshot {
+        uint256 timestamp;
+        uint256 supplyRate;
+    }
+
+    /**
      * /////////// EVENTS //////////////
      */
 
@@ -14,6 +23,22 @@ interface ICompoundV3YieldOracleAdmin is IYieldOracle {
      * @param comet The address of the set comet contract.
      */
     event CometSet(address indexed token, address indexed comet);
+
+    /**
+     * @notice Emitted when the supply rate is latched in the given comet pool.
+     * @param token The token address of the base asset for the comet contract.
+     * @param comet The address of the comet contract.
+     * @param supplyRate The latched supply rate of the comet contract.
+     */
+    event CometRateLatched(address indexed token, address indexed comet, uint256 supplyRate);
+
+    /**
+     * @notice Emitted when the comet snapshot array size is increased for a given token.
+     * @param token The token address of the base asset for which we're increasing the comet 
+     * snapshot array size.
+     * @param newSize The new size of the array.
+     */
+     event CometSnapshotArraySizeSet(address indexed token, uint16 newSize);
 
     /**
      * //////////// ERRORS ////////////
@@ -44,4 +69,28 @@ interface ICompoundV3YieldOracleAdmin is IYieldOracle {
      * @return The base asset's erc 20 address, the set comet address
      */
     function setCometAddress(address baseAssetErc20, address comet) external returns (address, address);
+
+    /**
+     * @notice Latches the current supply rate for the provided erc20 base asset.
+     * @dev Reverts if setCometAddress was not preiously called with the supplied token.
+     * @param token The address of the erc20 base asset.
+     * @return The latched supply rate.
+     */
+    function latchCometRate(address token) external returns (uint256);
+
+    /**
+     * @notice Gets the current list of snapshots of compound v3 supply rates
+     * @return The snapshots currently stored in the oracle.
+     */
+    function getCometSnapshots() external view returns (SupplyRateSnapshot[] memory);
+
+    /**
+     * @notice Increases the size of the supply rate buffer. Caller must pay the associated
+     * gas costs for increasing the size of the array.
+     * @dev Reverts if newSize is less than current size. Max size is 2^16/~65k
+     * @param token The erc20 underlying asset for which to increase the size of the comet buffer.
+     * @param newSize The new size of the array.
+     * @return New size of the array.
+     */
+    function setCometSnapshotBufferSize(address token, uint16 newSize) external returns (uint16);
 }

@@ -22,6 +22,8 @@ contract CompoundV3YieldOracleTest is Test {
     IComet public constant COMET_USDC = IComet(0xc3d688B66703497DAA19211EEdff47f25384cdc3);
     IERC20 public constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     IERC20 public constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address public constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
+
 
     CompoundV3YieldOracle public oracle;
 
@@ -42,7 +44,7 @@ contract CompoundV3YieldOracleTest is Test {
     }
 
     function setUp() public {
-        oracle = new CompoundV3YieldOracle();
+        oracle = new CompoundV3YieldOracle(KEEP3R_ADDRESS);
     }
 
     function testConstructor() public {

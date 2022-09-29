@@ -4,9 +4,9 @@ pragma solidity 0.8.13;
 import "./interfaces/ICompoundV3YieldOracleAdmin.sol";
 import "./interfaces/IComet.sol";
 import "./interfaces/IERC20.sol";
-import "./utils/Admin.sol";
+import "./utils/Keep3rV2Job.sol";
 
-contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
+contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Keep3rV2Job {
     /**
      * /////////// CONSTANTS ///////////////
      */
@@ -17,11 +17,17 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
      * ///////////// STATE ///////////////
      */
 
+    // token to array index mapping 
+    mapping(IERC20 => uint16) public tokenToSnapshotIndex;
+
+    mapping(IERC20 => SupplyRateSnapshot[]) public tokenToSnapshotArray;
+
     mapping(IERC20 => IComet) public tokenAddressToComet;
 
-    constructor() {
+    constructor(address _keep3r) {
         admin = msg.sender;
         setCometAddress(USDC_ADDRESS, COMET_USDC_ADDRESS);
+        keep3r = _keep3r;
     }
 
     /**
@@ -47,6 +53,14 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
     }
 
     /**
+     * //////////// Keep3r ////////////
+     */
+    
+    function work() external validateAndPayKeeper(msg.sender) {
+        revert();
+    }
+
+    /**
      * //////////// ICompoundV3YieldOracleAdmin //////////////
      */
 
@@ -67,5 +81,39 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
 
         emit CometSet(baseAssetErc20, comet);
         return (baseAssetErc20, comet);
+    }
+
+    /// @inheritdoc ICompoundV3YieldOracleAdmin
+    function latchCometRate(address token) external returns (uint256) {
+        revert();
+    }
+
+    /// @inheritdoc ICompoundV3YieldOracleAdmin
+    function getCometSnapshots() external view returns (SupplyRateSnapshot[] memory snapshots) {
+        revert();
+    }
+
+    /// @inheritdoc ICompoundV3YieldOracleAdmin
+    function setCometSnapshotBufferSize(address token, uint16 newSize) external returns (uint16) {
+        return _setCometSnapShotBufferSize(token, newSize);
+    }
+
+    /**
+     * /////////// Internal ///////////
+     */
+
+    function _setCometSnapShotBufferSize(address token, uint16 newSize) internal returns (uint26) {
+
+    }
+
+    function _latchSupplyRate(address token) internal returns (uint256 supplyRate) {
+        IComet comet = tokenAddressToComet[token];
+        if (comet == address(0)) {
+            revert InvalidCometAddress();
+        }
+
+
+
+        emit CometRateLatched(token, comet, supplyRate);
     }
 }
