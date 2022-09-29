@@ -20,7 +20,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Admin {
     mapping(IERC20 => IComet) public tokenAddressToComet;
 
     constructor() {
-        //admin = msg.sender;
+        admin = msg.sender;
         setCometAddress(USDC_ADDRESS, COMET_USDC_ADDRESS);
     }
 
