@@ -24,7 +24,6 @@ contract CompoundV3YieldOracleTest is Test {
     IERC20 public constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address public constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
 
-
     CompoundV3YieldOracle public oracle;
 
     struct AssetInfo {

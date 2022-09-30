@@ -34,11 +34,11 @@ interface ICompoundV3YieldOracle is IYieldOracle {
 
     /**
      * @notice Emitted when the comet snapshot array size is increased for a given token.
-     * @param token The token address of the base asset for which we're increasing the comet 
+     * @param token The token address of the base asset for which we're increasing the comet
      * snapshot array size.
      * @param newSize The new size of the array.
      */
-     event CometSnapshotArraySizeSet(address indexed token, uint16 newSize);
+    event CometSnapshotArraySizeSet(address indexed token, uint16 newSize);
 
     /**
      * //////////// ERRORS ////////////

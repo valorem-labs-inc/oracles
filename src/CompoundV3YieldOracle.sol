@@ -17,7 +17,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      * ///////////// STATE ///////////////
      */
 
-    // token to array index mapping 
+    // token to array index mapping
     mapping(IERC20 => uint16) public tokenToSnapshotIndex;
 
     mapping(IERC20 => SupplyRateSnapshot[]) public tokenToSnapshotArray;
@@ -55,7 +55,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     /**
      * //////////// Keep3r ////////////
      */
-    
+
     function work() external validateAndPayKeeper(msg.sender) {
         revert();
     }
@@ -84,21 +84,23 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function latchCometRate(address token) external returns (uint256) {
-        uint16 idx = tokenToSnapshotIndex[token];
-        SupplyRate[] storage snapshots = tokenToSnapshotArray[token];
-
-
+    function latchCometRate(address token) external requiresAdmin(msg.sender) returns (uint256) {
+        return _latchSupplyRate(token);
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
     function getCometSnapshots(address token) public view returns (uint16 idx, SupplyRateSnapshot[] memory snapshots) {
-        idx = tokenToSnapshotIndex[token];
-        snapshots = tokenToSnapshotArray[token];
+        IERC20 _token = IERC20(token);
+        idx = tokenToSnapshotIndex[_token];
+        snapshots = tokenToSnapshotArray[_token];
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function setCometSnapshotBufferSize(address token, uint16 newSize) external returns (uint16) {
+    function setCometSnapshotBufferSize(address token, uint16 newSize)
+        external
+        requiresAdmin(msg.sender)
+        returns (uint16)
+    {
         return _setCometSnapShotBufferSize(token, newSize);
     }
 
@@ -107,24 +109,26 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
 
     function _setCometSnapShotBufferSize(address token, uint16 newSize) internal returns (uint16) {
-        SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[token];
-        if (newSize <= snapshots.length) 
+        SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[IERC20(token)];
+        if (newSize <= snapshots.length) {
             return uint16(snapshots.length);
-        // increase array size
-        for (uint16 i = 0; i < newSize - uint16(snapshots.lenth); i++) {
-            // add uninitialized snapshot to extend length of array
-            snapshots.push(SupplyRateSnapShot(0, 0));
         }
-        
+        // increase array size
+        for (uint16 i = 0; i < newSize - uint16(snapshots.length); i++) {
+            // add uninitialized snapshot to extend length of array
+            snapshots.push(SupplyRateSnapshot(0, 0));
+        }
+
         emit CometSnapshotArraySizeSet(token, newSize);
         return newSize;
     }
 
     function _latchSupplyRate(address token) internal returns (uint256 supplyRate) {
         IComet comet;
-        uint16 idx = tokenToSnapshotIndex[token];
-        SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[token];
-        uint16 idxNext = (idx + 1) % snapshots.length;
+        IERC20 _token = IERC20(token);
+        uint16 idx = tokenToSnapshotIndex[_token];
+        SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[_token];
+        uint16 idxNext = (idx + 1) % uint16(snapshots.length);
 
         (supplyRate, comet) = _getSupplyRateYieldForUnderlyingAsset(token);
 
@@ -136,7 +140,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     }
 
     function _getSupplyRateYieldForUnderlyingAsset(address token) public view returns (uint256 yield, IComet comet) {
-        IComet comet = tokenAddressToComet[IERC20(token)];
+        comet = tokenAddressToComet[IERC20(token)];
         if (address(comet) == address(0)) {
             revert CometAddressNotSpecifiedForToken(token);
         }
