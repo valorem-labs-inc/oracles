@@ -80,9 +80,11 @@ interface ICompoundV3YieldOracle is IYieldOracle {
 
     /**
      * @notice Gets the current list of snapshots of compound v3 supply rates
-     * @return The snapshots currently stored in the oracle.
+     * @param token The address of the erc20 base asset for which to return the supply
+     * rate snapshots.
+     * @return The snapshots currently stored in the oracle, along with associated 'next' index.
      */
-    function getCometSnapshots() external view returns (SupplyRateSnapshot[] memory);
+    function getCometSnapshots(address token) external view returns (uint16, SupplyRateSnapshot[] memory);
 
     /**
      * @notice Increases the size of the supply rate buffer. Caller must pay the associated

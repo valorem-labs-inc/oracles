@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 
-import "../src/interfaces/ICompoundV3YieldOracleAdmin.sol";
+import "../src/interfaces/ICompoundV3YieldOracle.sol";
 import "../src/interfaces/IERC20.sol";
 import "../src/interfaces/IComet.sol";
 
@@ -53,10 +53,10 @@ contract CompoundV3YieldOracleTest is Test {
     }
 
     function testSetComet() public {
-        vm.expectRevert(ICompoundV3YieldOracleAdmin.InvalidTokenAddress.selector);
+        vm.expectRevert(ICompoundV3YieldOracle.InvalidTokenAddress.selector);
         oracle.setCometAddress(address(0), address(COMET_USDC));
 
-        vm.expectRevert(ICompoundV3YieldOracleAdmin.InvalidCometAddress.selector);
+        vm.expectRevert(ICompoundV3YieldOracle.InvalidCometAddress.selector);
         oracle.setCometAddress(address(this), address(0));
 
         // e.g. if 'this' were an ERC20
@@ -68,7 +68,7 @@ contract CompoundV3YieldOracleTest is Test {
 
     function testGetYield() public {
         vm.expectRevert(
-            abi.encodeWithSelector(ICompoundV3YieldOracleAdmin.CometAddressNotSpecifiedForToken.selector, address(this))
+            abi.encodeWithSelector(ICompoundV3YieldOracle.CometAddressNotSpecifiedForToken.selector, address(this))
         );
         oracle.getTokenYield(address(this));
 
