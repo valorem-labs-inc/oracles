@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "./interfaces/ICompoundV3YieldOracleAdmin.sol";
+import "./interfaces/ICompoundV3YieldOracle.sol";
 import "./interfaces/IComet.sol";
 import "./interfaces/IERC20.sol";
 import "./utils/Keep3rV2Job.sol";
 
-contract CompoundV3YieldOracle is ICompoundV3YieldOracleAdmin, Keep3rV2Job {
+contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     /**
      * /////////// CONSTANTS ///////////////
      */

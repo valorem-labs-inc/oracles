@@ -3,7 +3,7 @@ pragma solidity 0.8.13;
 
 import "./IYieldOracle.sol";
 
-interface ICompoundV3YieldOracleAdmin is IYieldOracle {
+interface ICompoundV3YieldOracle is IYieldOracle {
     /**
      * /////////// STRUCTS /////////////
      */
