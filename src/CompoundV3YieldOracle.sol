@@ -15,6 +15,17 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     uint16 public constant DEFAULT_SNAPSHOT_ARRAY_SIZE = 7;
 
     /**
+     * ///////////// STRUCTS /////////////
+     */
+    /// @dev Used to allow cumulative accounting of the time weighted rate
+    struct YieldInfo {
+        uint256 prevRate;
+        uint256 prevTs;
+        uint256 totalDelta;
+        uint256 weightedRateAcc;
+    }
+
+    /**
      * ///////////// STATE ///////////////
      */
 
@@ -50,11 +61,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         SupplyRateSnapshot[] memory snapshots = tokenToSnapshotArray[_token];
         /// write idx will always point at eldest element
         uint16 writeIdx = tokenToSnapshotWriteIndex[_token];
-        uint256 prevRate = snapshots[writeIdx].supplyRate;
-        uint256 prevTs = snapshots[writeIdx].timestamp; //first
-        // TODO: remove total delta accounting
-        uint256 totalDelta = 0;
-        uint256 weightedRateAcc = 0;
+        YieldInfo memory yieldInfo = YieldInfo(snapshots[writeIdx].supplyRate, snapshots[writeIdx].timestamp, 0, 0);
 
         /// go from writeIdx to end of initialized array
         for (uint256 i = writeIdx; i < snapshots.length; i++) {
@@ -63,30 +70,16 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
             if (snapshot.timestamp == 0) {
                 break;
             }
-
-            /// TODO: DRY out
-            (uint256 tsDelta, uint256 weightedPeriodRate) =
-                _getWeightedPeriodWeightAndTimeDelta(prevTs, prevRate, snapshot);
-
-            totalDelta += tsDelta;
-            weightedRateAcc += weightedPeriodRate;
-
-            prevTs = snapshot.timestamp;
+            _updateYieldInfo(yieldInfo, snapshot);
         }
 
         /// go from 0 to writeIdx - 1
         for (uint256 i = 0; i < writeIdx; i++) {
             SupplyRateSnapshot memory snapshot = snapshots[i];
-            (uint256 tsDelta, uint256 weightedPeriodRate) =
-                _getWeightedPeriodWeightAndTimeDelta(prevTs, prevRate, snapshot);
-
-            totalDelta += tsDelta;
-            weightedRateAcc += weightedPeriodRate;
-
-            prevTs = snapshot.timestamp;
+            _updateYieldInfo(yieldInfo, snapshot);
         }
 
-        return weightedRateAcc / totalDelta;
+        return yieldInfo.weightedRateAcc / yieldInfo.totalDelta;
     }
 
     /// @inheritdoc IYieldOracle
@@ -229,5 +222,16 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
             }
         }
         tokenRefreshList.push(IERC20(token));
+    }
+
+    function _updateYieldInfo(YieldInfo memory yieldInfo, SupplyRateSnapshot memory snapshot) internal pure {
+        (uint256 tsDelta, uint256 weightedPeriodRate) =
+            _getWeightedPeriodWeightAndTimeDelta(yieldInfo.prevTs, yieldInfo.prevRate, snapshot);
+
+        yieldInfo.totalDelta += tsDelta;
+        yieldInfo.weightedRateAcc += weightedPeriodRate;
+
+        yieldInfo.prevTs = snapshot.timestamp;
+        yieldInfo.prevRate = snapshot.supplyRate;
     }
 }
