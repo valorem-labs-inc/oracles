@@ -104,13 +104,7 @@ contract CompoundV3YieldOracleTest is Test {
         _writeTokenBalance(address(this), address(WETH), 1_000_000_000 ether);
         WETH.approve(address(COMET_USDC), 1_000_000_000 ether);
 
-        (
-            int256 reserve,
-            uint256 totalSupply,
-            uint128 totalSuppliedWETH,
-            uint128 wethSupplyCap,
-            uint256 amountToSupplyCap
-        ) = _getAndLogCometInfo();
+        (,,,, uint256 amountToSupplyCap) = _getAndLogCometInfo();
 
         (uint256 supplyRate,) = _logAndValidateSpotYieldAgainstOracle();
         COMET_USDC.supply(address(WETH), amountToSupplyCap);
@@ -129,6 +123,37 @@ contract CompoundV3YieldOracleTest is Test {
         oracle.latchCometRate(address(USDC));
         (uint256 supplyRate3,) = _logAndValidateSpotYieldAgainstOracle();
         assertGt(supplyRate3, supplyRate2);
+    }
+
+    function testTimeWeightedReturn() public {
+        uint256 toBorrow = 2_000_000;
+        uint256 usdcScale = 10 ** 6;
+        (,,,, uint256 amountToSupplyCap) = _getAndLogCometInfo();
+
+        _writeTokenBalance(address(this), address(WETH), 1_000_000_000 ether);
+        WETH.approve(address(COMET_USDC), 1_000_000_000 ether);
+        USDC.approve(address(COMET_USDC), 1_000_000_000 ether);
+        COMET_USDC.supply(address(WETH), amountToSupplyCap);
+
+        // withdraw, supply loop
+        for (uint256 i = 0; i < 10; i++) {
+            // borrow
+            oracle.latchCometRate(address(USDC));
+            COMET_USDC.withdraw(address(USDC), toBorrow * usdcScale);
+            vm.warp(block.timestamp + i * 10_000);
+
+            // repay
+            oracle.latchCometRate(address(USDC));
+            COMET_USDC.supply(address(USDC), toBorrow * usdcScale);
+            vm.warp(block.timestamp + i * 10_000);
+        }
+
+        (uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots) =
+            oracle.getCometSnapshots(address(USDC));
+
+        uint256 timeWeightedYield = oracle.getTokenYield(address(USDC));
+        assertEq(idx, 0);
+        assertEq(snapshots.length, 4);
     }
 
     function _writeTokenBalance(address who, address token, uint256 amt) internal {

@@ -48,8 +48,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         SupplyRateSnapshot[] memory snapshots = tokenToSnapshotArray[_token];
         /// write idx will always point at eldest element
         uint16 writeIdx = tokenToSnapshotWriteIndex[_token];
-        uint256 prevRate = 0;
-        uint256 prevTs = 0; //first
+        uint256 prevRate = snapshots[writeIdx].supplyRate;
+        uint256 prevTs = snapshots[writeIdx].timestamp; //first
         // TODO: remove total delta accounting
         uint256 totalDelta = 0;
         uint256 weightedRateAcc = 0;
@@ -202,7 +202,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         tsDelta = curTs - prevTs;
 
         // TODO: safeify
-        uint256 periodRate = (curRate - prevRate) / 2;
+        uint256 periodRate = (curRate + prevRate) / 2;
         weightedPeriodRate = periodRate * tsDelta;
     }
 }
