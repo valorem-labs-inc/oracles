@@ -18,7 +18,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
 
     // token to array index mapping
-    mapping(IERC20 => uint16) public tokenToSnapshotIndex;
+    mapping(IERC20 => uint16) public tokenToSnapshotWriteIndex;
 
     mapping(IERC20 => SupplyRateSnapshot[]) public tokenToSnapshotArray;
 
@@ -34,17 +34,51 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      * ////////// IYieldOracle //////////
      */
 
+    /// @notice Computed using a time weighted rate of return
     /// @dev compound III / comet is currently deployed/implemented only on USDC
     /// @inheritdoc IYieldOracle
     function getTokenYield(address token) public view returns (uint256 yield) {
-        IComet comet = tokenAddressToComet[IERC20(token)];
-        if (address(comet) == address(0)) {
-            revert CometAddressNotSpecifiedForToken(token);
+        IERC20 _token = IERC20(token);
+        SupplyRateSnapshot[] memory snapshots = tokenToSnapshotArray[_token];
+        /// write idx will always point at eldest element
+        uint16 writeIdx = tokenToSnapshotWriteIndex[_token];
+        uint256 prevRate = 0;
+        uint256 prevTs = 0; //first
+        // TODO: remove total delta accounting
+        uint256 totalDelta = 0;
+        uint256 weightedRateAcc = 0;
+
+        /// go from writeIdx to end of initialized array
+        for (uint256 i = writeIdx; i < snapshots.length; i++) {
+            SupplyRateSnapshot memory snapshot = snapshots[i];
+            /// break from loop if snapshot is not initialized
+            if (snapshot.timestamp == 0) {
+                break;
+            }
+
+            /// TODO: DRY out
+            (uint256 tsDelta, uint256 weightedPeriodRate) =
+                _getWeightedPeriodWeightAndTimeDelta(prevTs, prevRate, snapshot);
+
+            totalDelta += tsDelta;
+            weightedRateAcc += weightedPeriodRate;
+
+            prevTs = snapshot.timestamp;
         }
 
-        uint256 utilization = comet.getUtilization();
-        uint64 supplyRate = comet.getSupplyRate(utilization);
-        yield = uint256(supplyRate);
+        /// go from 0 to writeIdx - 1
+        for (uint256 i = 0; i < writeIdx; i++) {
+            SupplyRateSnapshot memory snapshot = snapshots[i];
+            (uint256 tsDelta, uint256 weightedPeriodRate) =
+                _getWeightedPeriodWeightAndTimeDelta(prevTs, prevRate, snapshot);
+
+            totalDelta += tsDelta;
+            weightedRateAcc += weightedPeriodRate;
+
+            prevTs = snapshot.timestamp;
+        }
+
+        return weightedRateAcc / totalDelta;
     }
 
     /// @inheritdoc IYieldOracle
@@ -91,7 +125,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     /// @inheritdoc ICompoundV3YieldOracle
     function getCometSnapshots(address token) public view returns (uint16 idx, SupplyRateSnapshot[] memory snapshots) {
         IERC20 _token = IERC20(token);
-        idx = tokenToSnapshotIndex[_token];
+        idx = tokenToSnapshotWriteIndex[_token];
         snapshots = tokenToSnapshotArray[_token];
     }
 
@@ -126,20 +160,21 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     function _latchSupplyRate(address token) internal returns (uint256 supplyRate) {
         IComet comet;
         IERC20 _token = IERC20(token);
-        uint16 idx = tokenToSnapshotIndex[_token];
+        uint16 idx = tokenToSnapshotWriteIndex[_token];
         SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[_token];
         uint16 idxNext = (idx + 1) % uint16(snapshots.length);
 
         (supplyRate, comet) = _getSupplyRateYieldForUnderlyingAsset(token);
 
         // update the cached rate
-        snapshots[idxNext].timestamp = block.timestamp;
-        snapshots[idxNext].supplyRate = supplyRate;
+        snapshots[idx].timestamp = block.timestamp;
+        snapshots[idx].supplyRate = supplyRate;
+        tokenToSnapshotWriteIndex[_token] = idxNext;
 
         emit CometRateLatched(token, address(comet), supplyRate);
     }
 
-    function _getSupplyRateYieldForUnderlyingAsset(address token) public view returns (uint256 yield, IComet comet) {
+    function _getSupplyRateYieldForUnderlyingAsset(address token) internal view returns (uint256 yield, IComet comet) {
         comet = tokenAddressToComet[IERC20(token)];
         if (address(comet) == address(0)) {
             revert CometAddressNotSpecifiedForToken(token);
@@ -148,5 +183,19 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         uint256 utilization = comet.getUtilization();
         uint64 supplyRate = comet.getSupplyRate(utilization);
         yield = uint256(supplyRate);
+    }
+
+    function _getWeightedPeriodWeightAndTimeDelta(uint256 prevTs, uint256 prevRate, SupplyRateSnapshot memory snapshot)
+        internal
+        pure
+        returns (uint256 tsDelta, uint256 weightedPeriodRate)
+    {
+        uint256 curTs = snapshot.timestamp;
+        uint256 curRate = snapshot.supplyRate;
+        tsDelta = curTs - prevTs;
+
+        // TODO: safeify
+        uint256 periodRate = (curRate - prevRate) / 2;
+        weightedPeriodRate = periodRate * tsDelta;
     }
 }
