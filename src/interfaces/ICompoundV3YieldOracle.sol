@@ -79,6 +79,12 @@ interface ICompoundV3YieldOracle is IYieldOracle {
     function latchCometRate(address token) external returns (uint256);
 
     /**
+     * @notice Refreshes the cached/latched supply rate of every registered ERC20
+     * underying asset.
+     */
+    function latchRatesForRegisteredTokens() external;
+
+    /**
      * @notice Gets the current list of snapshots of compound v3 supply rates
      * @param token The address of the erc20 base asset for which to return the supply
      * rate snapshots.

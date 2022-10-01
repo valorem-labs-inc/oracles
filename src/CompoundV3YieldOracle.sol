@@ -25,6 +25,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
 
     mapping(IERC20 => IComet) public tokenAddressToComet;
 
+    IERC20[] public tokenRefreshList;
+
     constructor(address _keep3r) {
         admin = msg.sender;
         setCometAddress(USDC_ADDRESS, COMET_USDC_ADDRESS);
@@ -97,7 +99,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
 
     function work() external validateAndPayKeeper(msg.sender) {
-        revert();
+        _latchYieldForRefreshTokens();
     }
 
     /**
@@ -117,6 +119,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
             revert InvalidCometAddress();
         }
 
+        _updateTokenRefreshList(baseAssetErc20);
+
         tokenAddressToComet[IERC20(baseAssetErc20)] = IComet(comet);
         _setCometSnapShotBufferSize(baseAssetErc20, DEFAULT_SNAPSHOT_ARRAY_SIZE);
 
@@ -127,6 +131,11 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     /// @inheritdoc ICompoundV3YieldOracle
     function latchCometRate(address token) external requiresAdmin(msg.sender) returns (uint256) {
         return _latchSupplyRate(token);
+    }
+
+    /// @inheritdoc ICompoundV3YieldOracle
+    function latchRatesForRegisteredTokens() external requiresAdmin(msg.sender) {
+        _latchYieldForRefreshTokens();
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
@@ -162,6 +171,12 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
 
         emit CometSnapshotArraySizeSet(token, newSize);
         return newSize;
+    }
+
+    function _latchYieldForRefreshTokens() internal {
+        for (uint256 i = 0; i < tokenRefreshList.length; i++) {
+            _latchSupplyRate(address(tokenRefreshList[i]));
+        }
     }
 
     function _latchSupplyRate(address token) internal returns (uint256 supplyRate) {
@@ -201,8 +216,18 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         uint256 curRate = snapshot.supplyRate;
         tsDelta = curTs - prevTs;
 
-        // TODO: safeify
         uint256 periodRate = (curRate + prevRate) / 2;
         weightedPeriodRate = periodRate * tsDelta;
+    }
+
+    function _updateTokenRefreshList(address token) internal {
+        // append token if not present in refresh list
+        for (uint256 i = 0; i < tokenRefreshList.length; i++) {
+            if (token == address(tokenRefreshList[i])) {
+                // don't append token if already present in the lsit
+                return;
+            }
+        }
+        tokenRefreshList.push(IERC20(token));
     }
 }
