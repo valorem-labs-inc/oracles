@@ -12,6 +12,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
     address public constant COMET_USDC_ADDRESS = 0xc3d688B66703497DAA19211EEdff47f25384cdc3;
     address public constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+    uint16 public constant DEFAULT_SNAPSHOT_ARRAY_SIZE = 7;
 
     /**
      * ///////////// STATE ///////////////
@@ -39,6 +40,11 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     /// @inheritdoc IYieldOracle
     function getTokenYield(address token) public view returns (uint256 yield) {
         IERC20 _token = IERC20(token);
+        IComet comet = tokenAddressToComet[(_token)];
+        if (address(comet) == address(0)) {
+            revert CometAddressNotSpecifiedForToken(token);
+        }
+
         SupplyRateSnapshot[] memory snapshots = tokenToSnapshotArray[_token];
         /// write idx will always point at eldest element
         uint16 writeIdx = tokenToSnapshotWriteIndex[_token];
@@ -112,6 +118,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         }
 
         tokenAddressToComet[IERC20(baseAssetErc20)] = IComet(comet);
+        _setCometSnapShotBufferSize(baseAssetErc20, DEFAULT_SNAPSHOT_ARRAY_SIZE);
 
         emit CometSet(baseAssetErc20, comet);
         return (baseAssetErc20, comet);

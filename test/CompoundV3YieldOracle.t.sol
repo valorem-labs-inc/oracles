@@ -65,20 +65,41 @@ contract CompoundV3YieldOracleTest is Test {
         assertEq(address(COMET_USDC), address(oracle.tokenAddressToComet(IERC20(address(this)))));
     }
 
-    function testGetYield() public {
+    function testGetSpotYield() public {
         vm.expectRevert(
             abi.encodeWithSelector(ICompoundV3YieldOracle.CometAddressNotSpecifiedForToken.selector, address(this))
         );
         oracle.getTokenYield(address(this));
 
-        uint256 yield = oracle.getTokenYield(address(USDC));
+        uint256 yield = oracle.latchCometRate(address(USDC));
         emit LogUint("usdc yield", yield);
 
         // blockno 15441384
         assertEq(yield, 723951975);
     }
 
+    function testUninitializedSnapshots() public {
+        (uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots) =
+            oracle.getCometSnapshots(address(USDC));
+        assertEq(idx, 0);
+        for (uint256 i = 0; i < snapshots.length; i++) {
+            assertEq(snapshots[i].timestamp, 0);
+            assertEq(snapshots[i].supplyRate, 0);
+        }
+    }
+
+    function testSnapshotUpdate() public {
+        oracle.latchCometRate(address(USDC));
+        (uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots) =
+            oracle.getCometSnapshots(address(USDC));
+        assertEq(idx, 1);
+        assertEq(snapshots[idx - 1].timestamp, block.timestamp);
+        assertFalse(snapshots[idx - 1].supplyRate == 0);
+    }
+
     function testMaxRateSwing() public {
+        oracle.latchCometRate(address(USDC));
+
         // grant a lot of ETH
         _writeTokenBalance(address(this), address(WETH), 1_000_000_000 ether);
         WETH.approve(address(COMET_USDC), 1_000_000_000 ether);
@@ -91,10 +112,10 @@ contract CompoundV3YieldOracleTest is Test {
             uint256 amountToSupplyCap
         ) = _getAndLogCometInfo();
 
-        (uint256 supplyRate,) = _logAndValidateYieldAgainstOracle();
+        (uint256 supplyRate,) = _logAndValidateSpotYieldAgainstOracle();
         COMET_USDC.supply(address(WETH), amountToSupplyCap);
         _getAndLogCometInfo();
-        (uint256 supplyRate2,) = _logAndValidateYieldAgainstOracle();
+        (uint256 supplyRate2,) = _logAndValidateSpotYieldAgainstOracle();
 
         assertEq(supplyRate, supplyRate2);
         assertTrue(COMET_USDC.isBorrowCollateralized(address(this)));
@@ -104,7 +125,9 @@ contract CompoundV3YieldOracleTest is Test {
 
         // flex utilization limits
         COMET_USDC.withdraw(address(USDC), toBorrow * usdcScale);
-        (uint256 supplyRate3,) = _logAndValidateYieldAgainstOracle();
+
+        oracle.latchCometRate(address(USDC));
+        (uint256 supplyRate3,) = _logAndValidateSpotYieldAgainstOracle();
         assertGt(supplyRate3, supplyRate2);
     }
 
@@ -146,17 +169,44 @@ contract CompoundV3YieldOracleTest is Test {
     function _getAndLogSupplyRate() internal returns (uint256 supplyRate) {
         uint256 utilization = _getAndLogUtilization();
         supplyRate = COMET_USDC.getSupplyRate(utilization);
-        emit LogUint("cUSDCv3 supply rate (apr)", _perSecondRateToApr(supplyRate));
+        emit LogUint("cUSDCv3 supply rate", supplyRate);
     }
 
-    function _getAndLogOracleYield() internal returns (uint256 yield) {
-        yield = oracle.getTokenYield(address(USDC));
-        emit LogUint("USDC oracle yield (apr)", _perSecondRateToApr(yield));
+    function _getAndLogSpotYield() internal returns (uint256 yield) {
+        (uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots) =
+            oracle.getCometSnapshots(address(USDC));
+        uint16 oldestIdx = _getMostRecentIndex(idx, snapshots);
+        ICompoundV3YieldOracle.SupplyRateSnapshot memory oldestSnapshot = snapshots[oldestIdx];
+        yield = oldestSnapshot.supplyRate;
+        emit LogUint("USDC oracle yield", yield);
     }
 
-    function _logAndValidateYieldAgainstOracle() internal returns (uint256 supplyRate, uint256 yield) {
+    function _getOldestIndex(uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots)
+        internal
+        pure
+        returns (uint16)
+    {
+        if (snapshots[idx].timestamp == 0) {
+            return 0;
+        }
+
+        return uint16((idx + 1) % snapshots.length);
+    }
+
+    function _getMostRecentIndex(uint16 idx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots)
+        internal
+        pure
+        returns (uint16)
+    {
+        if (idx == 0) {
+            return uint16(snapshots.length - 1);
+        }
+        return idx - 1;
+    }
+
+    function _logAndValidateSpotYieldAgainstOracle() internal returns (uint256 supplyRate, uint256 yield) {
         supplyRate = _getAndLogSupplyRate();
-        yield = _getAndLogOracleYield();
+        yield = _getAndLogSpotYield();
         assertEq(supplyRate, yield);
     }
 
