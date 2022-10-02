@@ -65,17 +65,17 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+                USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+                FUN_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
+                WETH_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
             )
         );
     }

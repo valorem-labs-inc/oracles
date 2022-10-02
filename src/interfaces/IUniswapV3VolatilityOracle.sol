@@ -16,6 +16,14 @@ interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle 
         UniswapV3FeeTier feeTier;
     }
 
+    enum UniswapV3FeeTier {
+        RESERVED,
+        PCT_POINT_01,
+        PCT_POINT_05,
+        PCT_POINT_3,
+        PCT_1
+    }
+
     /**
      * /////////// EVENTS /////////////
      */
@@ -41,6 +49,20 @@ interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle 
     /// @notice Emitted when the token refresh list is set.
     event TokenRefreshListSet();
 
+    /**
+     * @notice Emitted when the default token fee tier for the supplied token pair is set
+     * @param tokenA The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param tokenB The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param feeTier The UniswapV3 fee tier.
+     */
+    event DefaultTokenPairFeeTierSet(address indexed tokenA, address indexed tokenB, uint24 feeTier);
+
+    /// @notice Thrown if an invalid (== 0x0) token address is passed.
+    error InvalidToken();
+
+    /// @notice Thrown if an invalid (== RESERVED) fee tier is passed.
+    error InvalidFeeTier();
+
     /// @notice Thrown when the passed v3 factory address is invalid.
     error InvalidUniswapV3Factory();
 
@@ -50,9 +72,25 @@ interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle 
     /// @notice Thrown when the passed volatility oracle address is invalid.
     error InvalidVolatilityOracle();
 
+    /// @notice Thrown when no fee tier was specified via setDefaultFeeTierForTokenPair.
+    error NoFeeTierSpecifiedForTokenPair();
+
     /**
      * ////////// HELPERS ///////////
      */
+
+    /**
+     * @notice Retrieves the implied volatility of a ERC20 token.
+     * @param tokenA The ERC20 token for which to retrieve historical volatility.
+     * @param tokenB The ERC20 token for which to retrieve historical volatility.
+     * @param tier The Uniswap fee tier for the desired pool on which to derive a
+     * volatility measurement.
+     * @return impliedVolatility The implied volatility of the token, scaled by 1e18
+     */
+    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        external
+        view
+        returns (uint256 impliedVolatility);
 
     /**
      * @notice Retrieves the uniswap v3 pool for passed ERC20 address plus arguments
@@ -81,12 +119,31 @@ interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle 
     function refreshVolatilityCache() external returns (uint256 timestamp);
 
     /**
+     * @notice Returns the fee tier associated with a particular token pair.
+     * @param tokenA Token for which to retrieve the fee tier.
+     * @param tokenB Token for which to retrieve the fee tier.
+     * @return The fee tier associated with the pair.
+     */
+    function getDefaultFeeTierForTokenPair(address tokenA, address tokenB) external view returns (UniswapV3FeeTier);
+
+    /**
      * @notice Updates the cached implied volatility for the supplied pool info.
      * @return timestamp The timestamp of the cache refresh.
      */
     function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
         external
         returns (uint256 timestamp);
+
+    /**
+     * @notice Sets the default uniswap v3 fee tier for the token pair. Used when retrieving
+     * the uniswap v3 pool for a given pair.
+     * @param tokenA The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @param tokenB The contract address of the ERC20 for which to retrieve the v3 pool.
+     * @return The set values
+     */
+    function setDefaultFeeTierForTokenPair(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        external
+        returns (address, address, UniswapV3FeeTier);
 
     /**
      * ////////// TOKEN REFRESH LIST //////////
