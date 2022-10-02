@@ -128,6 +128,7 @@ interface IUniswapV3VolatilityOracle is IKeep3rV2Job, IAdmin, IVolatilityOracle 
 
     /**
      * @notice Updates the cached implied volatility for the supplied pool info.
+     * @param info The UniswapV3Pool info corresponding to the pool to refresh.
      * @return timestamp The timestamp of the cache refresh.
      */
     function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
