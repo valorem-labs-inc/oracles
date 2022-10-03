@@ -38,6 +38,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
 
     IERC20[] public tokenRefreshList;
 
+    mapping(address => uint) private tokenToTokenRefreshListIndex;
+
     constructor(address _keep3r) {
         admin = msg.sender;
         setCometAddress(USDC_ADDRESS, COMET_USDC_ADDRESS);
@@ -215,13 +217,13 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
 
     function _updateTokenRefreshList(address token) internal {
         // append token if not present in refresh list
-        for (uint256 i = 0; i < tokenRefreshList.length; i++) {
-            if (token == address(tokenRefreshList[i])) {
-                // don't append token if already present in the lsit
-                return;
-            }
+        uint16 index = tokenToTokenRefreshListIndex[token];
+
+        // uninitialized
+        if (index == 0) {
+            tokenRefreshList.push(IERC20(token));
+            tokenToTokenRefreshListIndex[token] = tokenRefreshList.length;
         }
-        tokenRefreshList.push(IERC20(token));
     }
 
     function _updateYieldInfo(YieldInfo memory yieldInfo, SupplyRateSnapshot memory snapshot) internal pure {
