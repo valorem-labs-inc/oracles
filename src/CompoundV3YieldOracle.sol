@@ -38,7 +38,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
 
     IERC20[] public tokenRefreshList;
 
-    mapping(address => uint256) private tokenToTokenRefreshListIndex;
+    mapping(address => uint16) private tokenToTokenRefreshListIndex;
 
     constructor(address _keep3r) {
         admin = msg.sender;
@@ -222,7 +222,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
         // uninitialized
         if (index == 0) {
             tokenRefreshList.push(IERC20(token));
-            tokenToTokenRefreshListIndex[token] = tokenRefreshList.length;
+            tokenToTokenRefreshListIndex[token] = uint16(tokenRefreshList.length);
         }
     }
 
