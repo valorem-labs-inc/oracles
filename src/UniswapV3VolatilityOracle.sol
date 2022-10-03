@@ -117,7 +117,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /// @inheritdoc IUniswapV3VolatilityOracle
     function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
         public
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (uint256)
     {
         _refreshPoolMetadata(info);
@@ -128,7 +128,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /// @inheritdoc IUniswapV3VolatilityOracle
     function setDefaultFeeTierForTokenPair(address tokenA, address tokenB, UniswapV3FeeTier tier)
         external
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (address, address, UniswapV3FeeTier)
     {
         if (tokenA == address(0) || tokenB == address(0)) {
@@ -144,7 +144,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
-    function cacheMetadataFor(IUniswapV3Pool pool) public requiresAdmin(msg.sender) {
+    function cacheMetadataFor(IUniswapV3Pool pool) public requiresAdmin {
         _cacheMetadataFor(pool);
     }
 
@@ -191,7 +191,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /// @inheritdoc IUniswapV3VolatilityOracle
     function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (UniswapV3PoolInfo[] memory)
     {
         delete tokenFeeTierList;
