@@ -300,7 +300,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
         Volatility.PoolMetadata memory poolMetadata = cachedPoolMetadata[_pool];
 
         uint32 secondsAgo = poolMetadata.maxSecondsAgo;
-        require(secondsAgo >= 1 hours, "Aloe: need more data");
+        require(secondsAgo >= 1 hours, "IV Oracle: need more data");
         if (secondsAgo > 1 days) {
             secondsAgo = 1 days;
         }

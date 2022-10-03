@@ -195,7 +195,7 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
         assertEq(uint256(tier), uint256(IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_05));
 
         // assert that the value is used for get IV
-        vm.expectRevert(bytes("Aloe: need more data"));
+        vm.expectRevert(bytes("IV Oracle: need more data"));
         oracle.getImpliedVolatility(USDC_ADDRESS, DAI_ADDRESS);
     }
 
