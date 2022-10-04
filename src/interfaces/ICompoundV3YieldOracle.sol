@@ -57,6 +57,10 @@ interface ICompoundV3YieldOracle is IYieldOracle {
     /// @notice Emitted for invalid comet addresses supplied to setCometAddress
     error InvalidCometAddress();
 
+    /// @notice Emitted if the supplied size for the snapshot array exceeds the max
+    /// limit
+    error SnapshotArraySizeTooLarge();
+
     /**
      * ///////// ADMIN /////////
      */

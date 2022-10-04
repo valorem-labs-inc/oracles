@@ -23,6 +23,8 @@ contract CompoundV3YieldOracleTest is Test {
     IERC20 public constant USDC = IERC20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
     IERC20 public constant WETH = IERC20(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
     address public constant KEEP3R_ADDRESS = 0xeb02addCfD8B773A5FFA6B9d1FE99c566f8c44CC;
+    uint16 public constant DEFAULT_SNAPSHOT_ARRAY_SIZE = 5;
+    uint16 public constant MAXIMUM_SNAPSHOT_ARRAY_SIZE = 3 * 5;
 
     CompoundV3YieldOracle public oracle;
 
@@ -63,6 +65,27 @@ contract CompoundV3YieldOracleTest is Test {
         emit CometSet(address(this), address(COMET_USDC));
         oracle.setCometAddress(address(this), address(COMET_USDC));
         assertEq(address(COMET_USDC), address(oracle.tokenAddressToComet(IERC20(address(this)))));
+    }
+
+    function testSetSnapshotArraySize() public {
+        (uint16 initIdx, ICompoundV3YieldOracle.SupplyRateSnapshot[] memory snapshots) =
+            oracle.getCometSnapshots(address(USDC));
+        uint16 initSz = uint16(snapshots.length);
+        assertEq(initSz, DEFAULT_SNAPSHOT_ARRAY_SIZE);
+        assertEq(initIdx, 0);
+
+        // assert that the snapshot array maintains the same size if a smaller size
+        // is provided
+        uint16 snapshotSz = oracle.setCometSnapshotBufferSize(address(USDC), initSz - 1);
+        assertEq(snapshotSz, DEFAULT_SNAPSHOT_ARRAY_SIZE);
+
+        // assert that the snapshot array can grow
+        snapshotSz = oracle.setCometSnapshotBufferSize(address(USDC), initSz + 1);
+        assertEq(snapshotSz, DEFAULT_SNAPSHOT_ARRAY_SIZE + 1);
+
+        // assert a revert if the max size cap is exceeded
+        vm.expectRevert(ICompoundV3YieldOracle.SnapshotArraySizeTooLarge.selector);
+        oracle.setCometSnapshotBufferSize(address(USDC), MAXIMUM_SNAPSHOT_ARRAY_SIZE + 1);
     }
 
     function testGetSpotYield() public {

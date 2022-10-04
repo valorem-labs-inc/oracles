@@ -12,7 +12,8 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
     address public constant COMET_USDC_ADDRESS = 0xc3d688B66703497DAA19211EEdff47f25384cdc3;
     address public constant USDC_ADDRESS = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    uint16 public constant DEFAULT_SNAPSHOT_ARRAY_SIZE = 7;
+    uint16 public constant DEFAULT_SNAPSHOT_ARRAY_SIZE = 5;
+    uint16 public constant MAXIMUM_SNAPSHOT_ARRAY_SIZE = 3 * 5;
 
     /**
      * ///////////// STRUCTS /////////////
@@ -154,12 +155,18 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
 
     function _setCometSnapShotBufferSize(address token, uint16 newSize) internal returns (uint16) {
+        if (newSize > MAXIMUM_SNAPSHOT_ARRAY_SIZE) {
+            revert SnapshotArraySizeTooLarge();
+        }
+
         SupplyRateSnapshot[] storage snapshots = tokenToSnapshotArray[IERC20(token)];
         if (newSize <= snapshots.length) {
             return uint16(snapshots.length);
         }
+
+        uint16 currentSz = uint16(snapshots.length);
         // increase array size
-        for (uint16 i = 0; i < newSize - uint16(snapshots.length); i++) {
+        for (uint16 i = 0; i < newSize - currentSz; i++) {
             // add uninitialized snapshot to extend length of array
             snapshots.push(SupplyRateSnapshot(0, 0));
         }
