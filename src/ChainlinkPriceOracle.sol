@@ -39,6 +39,12 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
     /**
      * ///////////// IChainlinkPriceOracleAdmin ////////////
      */
+    function getPriceUSD(IERC20 token) external view returns (uint256) {
+        (, int256 price,,,) = chainlinkPriceOracle.latestRoundData();
+        // get rid of warnings
+        uint256 tmp = uint256(uint160(address(token)));
+        uint256 price2 = uint256(price);
+        return tmp + price2;
 
     /// @inheritdoc IChainlinkPriceOracleAdmin
     function setPriceFeed(IERC20 token, AggregatorV3Interface priceFeed)

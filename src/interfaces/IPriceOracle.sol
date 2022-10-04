@@ -11,8 +11,10 @@ import "./IERC20.sol";
  * by being wrapped in a contract implementing this interface.
  */
 interface IPriceOracle {
+    error PriceNotAvailable();
+
     /**
-     * @notice Returns the price against USD for a specific ERC20, sourced from chainlink.
+     * @notice Reverts PriceNotAvailable if the USD price cannot be derived
      * @param token The ERC20 token to retrieve the USD price for
      * @return price The price of the token in USD, scale The power of 10 by which the return is scaled
      */
