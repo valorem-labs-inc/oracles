@@ -181,14 +181,21 @@ contract CompoundV3YieldOracleTest is Test {
     }
 
     function testExistingTokenForNewComet() public {
+        uint256 gasBefore = gasleft();
         oracle.setCometAddress(address(this), address(1));
         vm.expectRevert();
         oracle.tokenRefreshList(2);
 
         // pretend we're updating the existing comet address
         oracle.setCometAddress(address(this), address(2));
+        // this should still revert since we haven't extended the array
         vm.expectRevert();
         oracle.tokenRefreshList(2);
+
+        uint256 gasLeft = gasBefore - gasleft();
+        // fix gas to ensure O(1) complexity isn't changed
+        emit LogUint("gasLeft", gasLeft);
+        assertEq(gasLeft, 139778);
     }
 
     function _writeTokenBalance(address who, address token, uint256 amt) internal {
