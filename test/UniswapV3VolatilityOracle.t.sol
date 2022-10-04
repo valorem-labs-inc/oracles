@@ -65,17 +65,17 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
         delete defaultTokenRefreshList;
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                USDC_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+                USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                FUN_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+                FUN_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
             )
         );
         defaultTokenRefreshList.push(
             IUniswapV3VolatilityOracle.UniswapV3PoolInfo(
-                WETH_ADDRESS, DAI_ADDRESS, IVolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
+                WETH_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
             )
         );
     }
@@ -98,6 +98,11 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
 
         vm.expectRevert(bytes("!ADMIN"));
         oracle.setTokenFeeTierRefreshList(defaultTokenRefreshList);
+
+        vm.expectRevert(bytes("!ADMIN"));
+        oracle.setDefaultFeeTierForTokenPair(
+            USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_3
+        );
 
         // USDC-USDT
         IUniswapV3Pool pool = IUniswapV3Pool(0x3416cF6C708Da44DB2624D63ea0AAef7113527C6);
@@ -164,6 +169,34 @@ contract UniswapV3VolatilityOracleTest is Test, IUniswapV3SwapCallback {
         vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.isKeeper.selector), abi.encode(true));
         vm.mockCall(KEEP3R_ADDRESS, abi.encodeWithSelector(IKeep3rJobWorkable.worked.selector), abi.encode(""));
         oracle.work();
+    }
+
+    function testDefaultFeeTierManagement() public {
+        // default fee tier should be uninitialized
+        IUniswapV3VolatilityOracle.UniswapV3FeeTier tier =
+            oracle.getDefaultFeeTierForTokenPair(USDC_ADDRESS, DAI_ADDRESS);
+        assertEq(uint256(tier), uint256(IUniswapV3VolatilityOracle.UniswapV3FeeTier.RESERVED));
+
+        // calling getIV without specifing a default fee tier for a token pair should revert
+        vm.expectRevert(IUniswapV3VolatilityOracle.NoFeeTierSpecifiedForTokenPair.selector);
+        oracle.getImpliedVolatility(USDC_ADDRESS, DAI_ADDRESS);
+
+        // assert the token pair is stored
+        oracle.setDefaultFeeTierForTokenPair(
+            USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01
+        );
+        tier = oracle.getDefaultFeeTierForTokenPair(USDC_ADDRESS, DAI_ADDRESS);
+        assertEq(uint256(tier), uint256(IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_01));
+
+        oracle.setDefaultFeeTierForTokenPair(
+            USDC_ADDRESS, DAI_ADDRESS, IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_05
+        );
+        tier = oracle.getDefaultFeeTierForTokenPair(USDC_ADDRESS, DAI_ADDRESS);
+        assertEq(uint256(tier), uint256(IUniswapV3VolatilityOracle.UniswapV3FeeTier.PCT_POINT_05));
+
+        // assert that the value is used for get IV
+        vm.expectRevert(bytes("IV Oracle: need more data"));
+        oracle.getImpliedVolatility(USDC_ADDRESS, DAI_ADDRESS);
     }
 
     /**

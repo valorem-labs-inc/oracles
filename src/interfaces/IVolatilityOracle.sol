@@ -20,7 +20,7 @@ interface IVolatilityOracle {
      * @notice Retrieves the implied volatility of a ERC20 token.
      * @param tokenA The ERC20 token for which to retrieve historical volatility.
      * @param tokenB The ERC20 token for which to retrieve historical volatility.
-     * @return impliedVolatility The implied volatility of the token, scaled by 1e18
+     * @return impliedVolatility The implied volatility of the token, scaled by scale()
      */
     function getImpliedVolatility(address tokenA, address tokenB) external view returns (uint256 impliedVolatility);
 
@@ -28,5 +28,5 @@ interface IVolatilityOracle {
      * @notice Returns the scaling factor for the volatility
      * @return scale The power of 10 by which the return is scaled
      */
-    function scale() external view returns (uint16 scale);
+    function scale() external view returns (uint8 scale);
 }

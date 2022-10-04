@@ -31,6 +31,8 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
         uint8 write;
     }
 
+    mapping(bytes32 => UniswapV3FeeTier) private tokenPairHashToDefaultFeeTier;
+
     /// @inheritdoc IUniswapV3VolatilityOracle
     mapping(IUniswapV3Pool => Volatility.PoolMetadata) public cachedPoolMetadata;
 
@@ -60,26 +62,36 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc IVolatilityOracle
-    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
-        external
-        view
-        returns (uint256 impliedVolatility)
-    {
-        uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
-        IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
-        uint256[25] memory loadedLens = lens(pool);
-        Indices memory idxs = feeGrowthGlobalsIndices[pool];
-        return loadedLens[idxs.read];
+    function getImpliedVolatility(address tokenA, address tokenB) external view returns (uint256 impliedVolatility) {
+        UniswapV3FeeTier tier = getDefaultFeeTierForTokenPair(tokenA, tokenB);
+        return getImpliedVolatility(tokenA, tokenB, tier);
     }
 
     /// @inheritdoc IVolatilityOracle
-    function scale() external pure returns (uint16) {
+    function scale() external pure returns (uint8) {
         return 18;
     }
 
     /**
      * /////////// IUniswapV3VolatilityOracle //////////
      */
+
+    /// @inheritdoc IUniswapV3VolatilityOracle
+    function getImpliedVolatility(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        public
+        view
+        returns (uint256 impliedVolatility)
+    {
+        if (tier == UniswapV3FeeTier.RESERVED) {
+            revert NoFeeTierSpecifiedForTokenPair();
+        }
+
+        uint24 fee = getUniswapV3FeeInHundredthsOfBip(tier);
+        IUniswapV3Pool pool = getV3PoolForTokensAndFee(tokenA, tokenB, fee);
+        uint256[25] memory loadedLens = lens(pool);
+        Indices memory idxs = feeGrowthGlobalsIndices[pool];
+        return loadedLens[idxs.read];
+    }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
     function getV3PoolForTokensAndFee(address tokenA, address tokenB, uint24 fee)
@@ -91,6 +103,13 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
+    function getDefaultFeeTierForTokenPair(address tokenA, address tokenB) public view returns (UniswapV3FeeTier) {
+        bytes32 tokenPairHash = keccak256(abi.encodePacked(tokenA, tokenB));
+        UniswapV3FeeTier tier = tokenPairHashToDefaultFeeTier[tokenPairHash];
+        return tier;
+    }
+
+    /// @inheritdoc IUniswapV3VolatilityOracle
     function refreshVolatilityCache() public returns (uint256) {
         return _refreshVolatilityCache();
     }
@@ -98,7 +117,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /// @inheritdoc IUniswapV3VolatilityOracle
     function refreshVolatilityCacheAndMetadataForPool(UniswapV3PoolInfo calldata info)
         public
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (uint256)
     {
         _refreshPoolMetadata(info);
@@ -107,7 +126,25 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
-    function cacheMetadataFor(IUniswapV3Pool pool) public requiresAdmin(msg.sender) {
+    function setDefaultFeeTierForTokenPair(address tokenA, address tokenB, UniswapV3FeeTier tier)
+        external
+        requiresAdmin
+        returns (address, address, UniswapV3FeeTier)
+    {
+        if (tokenA == address(0) || tokenB == address(0)) {
+            revert InvalidToken();
+        }
+        if (tier == UniswapV3FeeTier.RESERVED) {
+            revert InvalidFeeTier();
+        }
+
+        bytes32 tokenPairHash = keccak256(abi.encodePacked(tokenA, tokenB));
+        tokenPairHashToDefaultFeeTier[tokenPairHash] = tier;
+        return (tokenA, tokenB, tier);
+    }
+
+    /// @inheritdoc IUniswapV3VolatilityOracle
+    function cacheMetadataFor(IUniswapV3Pool pool) public requiresAdmin {
         _cacheMetadataFor(pool);
     }
 
@@ -154,7 +191,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /// @inheritdoc IUniswapV3VolatilityOracle
     function setTokenFeeTierRefreshList(UniswapV3PoolInfo[] calldata list)
         external
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (UniswapV3PoolInfo[] memory)
     {
         delete tokenFeeTierList;
@@ -176,12 +213,6 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
     /**
      * /////////////// ADMIN FUNCTIONS ///////////////
      */
-
-    function setAdmin(address _admin) external requiresAdmin(msg.sender) {
-        require(_admin != address(0x0), "INVALID ADMIN");
-        admin = _admin;
-        emit AdminSet(_admin);
-    }
 
     /// @inheritdoc IUniswapV3VolatilityOracle
     function getUniswapV3FeeInHundredthsOfBip(UniswapV3FeeTier tier) public pure returns (uint24) {
@@ -269,7 +300,7 @@ contract UniswapV3VolatilityOracle is IUniswapV3VolatilityOracle, Keep3rV2Job {
         Volatility.PoolMetadata memory poolMetadata = cachedPoolMetadata[_pool];
 
         uint32 secondsAgo = poolMetadata.maxSecondsAgo;
-        require(secondsAgo >= 1 hours, "Aloe: need more data");
+        require(secondsAgo >= 1 hours, "IV Oracle: need more data");
         if (secondsAgo > 1 days) {
             secondsAgo = 1 days;
         }

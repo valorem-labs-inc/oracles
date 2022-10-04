@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL 1.1
 pragma solidity 0.8.13;
 
-import "solmate/tokens/ERC20.sol";
 import "./IERC20.sol";
 
 /**
@@ -17,13 +16,7 @@ interface IPriceOracle {
     /**
      * @notice Reverts PriceNotAvailable if the USD price cannot be derived
      * @param token The ERC20 token to retrieve the USD price for
-     * @return price The price of the token in USD
+     * @return price The price of the token in USD, scale The power of 10 by which the return is scaled
      */
-    function getPriceUSD(IERC20 token) external view returns (uint256 price);
-
-    /**
-     * @notice Returns the scaling factor for the price
-     * @return scale The power of 10 by which the return is scaled
-     */
-    function scale() external view returns (uint8 scale);
+    function getPriceUSD(IERC20 token) external view returns (uint256 price, uint8 scale);
 }
