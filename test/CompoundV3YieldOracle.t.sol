@@ -180,6 +180,17 @@ contract CompoundV3YieldOracleTest is Test {
         assertEq(timeWeightedYield, 2211616289);
     }
 
+    function testExistingTokenForNewComet() public {
+        oracle.setCometAddress(address(this), address(1));
+        vm.expectRevert();
+        oracle.tokenRefreshList(2);
+
+        // pretend we're updating the existing comet address
+        oracle.setCometAddress(address(this), address(2));
+        vm.expectRevert();
+        oracle.tokenRefreshList(2);
+    }
+
     function _writeTokenBalance(address who, address token, uint256 amt) internal {
         stdstore.target(token).sig(IERC20(token).balanceOf.selector).with_key(who).checked_write(amt);
     }
