@@ -103,11 +103,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
      */
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function setCometAddress(address baseAssetErc20, address comet)
-        public
-        requiresAdmin(msg.sender)
-        returns (address, address)
-    {
+    function setCometAddress(address baseAssetErc20, address comet) public requiresAdmin returns (address, address) {
         if (baseAssetErc20 == address(0)) {
             revert InvalidTokenAddress();
         }
@@ -125,12 +121,12 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function latchCometRate(address token) external requiresAdmin(msg.sender) returns (uint256) {
+    function latchCometRate(address token) external requiresAdmin returns (uint256) {
         return _latchSupplyRate(token);
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function latchRatesForRegisteredTokens() external requiresAdmin(msg.sender) {
+    function latchRatesForRegisteredTokens() external requiresAdmin {
         _latchYieldForRefreshTokens();
     }
 
@@ -142,11 +138,7 @@ contract CompoundV3YieldOracle is ICompoundV3YieldOracle, Keep3rV2Job {
     }
 
     /// @inheritdoc ICompoundV3YieldOracle
-    function setCometSnapshotBufferSize(address token, uint16 newSize)
-        external
-        requiresAdmin(msg.sender)
-        returns (uint16)
-    {
+    function setCometSnapshotBufferSize(address token, uint16 newSize) external requiresAdmin returns (uint16) {
         return _setCometSnapShotBufferSize(token, newSize);
     }
 
