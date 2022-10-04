@@ -43,7 +43,7 @@ contract ChainlinkPriceOracle is IPriceOracle, IChainlinkPriceOracleAdmin, Admin
     /// @inheritdoc IChainlinkPriceOracleAdmin
     function setPriceFeed(IERC20 token, AggregatorV3Interface priceFeed)
         external
-        requiresAdmin(msg.sender)
+        requiresAdmin
         returns (address, address)
     {
         // todo: validate token and price feed

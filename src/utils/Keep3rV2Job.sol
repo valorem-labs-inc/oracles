@@ -16,7 +16,7 @@ abstract contract Keep3rV2Job is IKeep3rV2Job, Admin {
         IKeep3r(keep3r).worked(_keeper);
     }
 
-    function setKeep3r(address _keep3r) public requiresAdmin(msg.sender) {
+    function setKeep3r(address _keep3r) public requiresAdmin {
         _setKeep3r(_keep3r);
     }
 
