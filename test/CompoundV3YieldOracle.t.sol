@@ -176,8 +176,8 @@ contract CompoundV3YieldOracleTest is Test {
 
         uint256 timeWeightedYield = oracle.getTokenYield(address(USDC));
         assertEq(idx, 0);
-        assertEq(snapshots.length, 4);
-        assertEq(timeWeightedYield, 2211565454);
+        assertEq(snapshots.length, 5);
+        assertEq(timeWeightedYield, 2211616289);
     }
 
     function _writeTokenBalance(address who, address token, uint256 amt) internal {
