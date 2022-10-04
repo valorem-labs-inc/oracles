@@ -22,3 +22,6 @@
 [submodule "lib/v3-periphery"]
 	path = lib/v3-periphery
 	url = https://github.com/Uniswap/v3-periphery.git
+[submodule "lib/comet"]
+	path = lib/comet
+	url = https://github.com/compound-finance/comet.git

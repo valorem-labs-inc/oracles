@@ -6,3 +6,4 @@ v3-periphery/=lib/v3-periphery/
 valorem-core/=lib/valorem-core/src
 chainlink/=lib/chainlink
 keep3r/=lib/keep3r-network-v2
+comet/=lib/comet
